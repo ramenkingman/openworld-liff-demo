@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>OpenWorld 会員証</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <h1>OpenWorld 会員証</h1>
+  <p id="name">ユーザー名: 取得中...</p>
+  <p id="userId">ユーザーID: </p>
+  <img id="qr" style="width: 200px;" />
+
+  <script>
+    async function main() {
+      await liff.init({ liffId: "あなたのLIFF ID" }); // ←ココを修正
+      if (!liff.isLoggedIn()) {
+        liff.login();
+      } else {
+        const profile = await liff.getProfile();
+        document.getElementById("name").innerText = "ユーザー名: " + profile.displayName;
+        document.getElementById("userId").innerText = "ユーザーID: " + profile.userId;
+        document.getElementById("qr").src = `https://api.qrserver.com/v1/create-qr-code/?data=${profile.userId}&size=200x200`;
+      }
+    }
+    main();
+  </script>
+</body>
+</html>
