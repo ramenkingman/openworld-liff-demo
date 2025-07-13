@@ -5,11 +5,9 @@
   <title>OpenWorld 会員証</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script type="module">
-    // Firebase SDKのインポート
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-    // Firebase設定
     const firebaseConfig = {
       apiKey: "AIzaSyDwqG7to68d7O9KQ2EPWaUD1UFm_Cq9HXo",
       authDomain: "openworld-liff.firebaseapp.com",
@@ -20,11 +18,9 @@
       measurementId: "G-SRK6BVFDYN"
     };
 
-    // 初期化
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // LIFF初期化 & Firestore登録
     async function main() {
       await liff.init({ liffId: "2007741116-ljZP4eGp" });
 
@@ -36,43 +32,31 @@
       const profile = await liff.getProfile();
       const userId = profile.userId;
 
-      // すでに登録されているか確認
-      const q = query(collection(db, "members"), where("userId", "==", userId));
-      const snapshot = await getDocs(q);
-
-      let docId = null;
       let serialNumber = 0;
       let registeredAt = null;
 
+      const q = query(collection(db, "members"), where("userId", "==", userId));
+      const snapshot = await getDocs(q);
+
       if (snapshot.empty) {
-        // 未登録 → 新規追加
-        const newDoc = await addDoc(collection(db, "members"), {
+        await addDoc(collection(db, "members"), {
           userId: userId,
           displayName: profile.displayName,
           pictureUrl: profile.pictureUrl,
           registeredAt: new Date().toISOString()
         });
-
-        // 登録順に並べて何番目かを判定
-        const allDocs = await getDocs(query(collection(db, "members"), orderBy("registeredAt")));
-        allDocs.forEach((doc, index) => {
-          if (doc.id === newDoc.id) {
-            serialNumber = index + 1;
-            registeredAt = doc.data().registeredAt;
-          }
-        });
-      } else {
-        // 既に登録済み → シリアル番号算出
-        const allDocs = await getDocs(query(collection(db, "members"), orderBy("registeredAt")));
-        allDocs.forEach((doc, index) => {
-          if (doc.data().userId === userId) {
-            serialNumber = index + 1;
-            registeredAt = doc.data().registeredAt;
-          }
-        });
       }
 
-      // 表示
+      // 登録順取得＆シリアル番号決定
+      const allDocs = await getDocs(query(collection(db, "members"), orderBy("registeredAt")));
+      allDocs.forEach((doc, index) => {
+        if (doc.data().userId === userId) {
+          serialNumber = index + 1;
+          registeredAt = doc.data().registeredAt;
+        }
+      });
+
+      // 表示更新
       document.getElementById("serial").innerText = `会員証 No: #${String(serialNumber).padStart(4, "0")}`;
       document.getElementById("name").innerText = `名前: ${profile.displayName}`;
       document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
