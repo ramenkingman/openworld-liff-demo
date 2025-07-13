@@ -5,9 +5,11 @@
   <title>OpenWorld 会員証</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script type="module">
+    // Firebase SDK 読み込み
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
+    // Firebase 設定
     const firebaseConfig = {
       apiKey: "AIzaSyDwqG7to68d7O9KQ2EPWaUD1UFm_Cq9HXo",
       authDomain: "openworld-liff.firebaseapp.com",
@@ -18,26 +20,30 @@
       measurementId: "G-SRK6BVFDYN"
     };
 
+    // Firebase 初期化
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
     async function main() {
+      // LIFF 初期化
       await liff.init({ liffId: "2007741116-ljZP4eGp" });
 
+      // 未ログインならログインさせる
       if (!liff.isLoggedIn()) {
         liff.login();
         return;
       }
 
+      // LINEプロフィール取得
       const profile = await liff.getProfile();
       const userId = profile.userId;
 
-      // 🔍 すでに登録済みか確認
+      // Firestoreに既存登録されているかチェック
       const q = query(collection(db, "members"), where("userId", "==", userId));
       const snapshot = await getDocs(q);
 
       if (snapshot.empty) {
-        // 🔄 登録されていなければ新規追加
+        // 未登録なら新規追加
         await addDoc(collection(db, "members"), {
           userId: userId,
           displayName: profile.displayName,
@@ -46,7 +52,7 @@
         });
       }
 
-      // ✅ すべての登録を時系列で取得して並べる
+      // 全メンバーを登録日時順に取得し、自分の位置を割り出す
       const allDocs = await getDocs(query(collection(db, "members"), orderBy("registeredAt")));
 
       let serialNumber = 0;
@@ -60,7 +66,7 @@
         }
       });
 
-      // ✅ 表示反映
+      // 表示反映
       document.getElementById("serial").innerText = `会員証 No: #${String(serialNumber).padStart(4, "0")}`;
       document.getElementById("name").innerText = `名前: ${profile.displayName}`;
       document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
