@@ -6,7 +6,15 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      query,
+      orderBy,
+      where
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDwqG7to68d7O9KQ2EPWaUD1UFm_Cq9HXo",
@@ -32,7 +40,6 @@
       const profile = await liff.getProfile();
       const userId = profile.userId;
 
-      // 🔍 すでに登録済みか確認
       const q = query(collection(db, "members"), where("userId", "==", userId));
       const snapshot = await getDocs(q);
 
@@ -45,7 +52,6 @@
         });
       }
 
-      // 🔄 登録順を取得
       const allDocs = await getDocs(query(collection(db, "members"), orderBy("registeredAt")));
       let serialNumber = null;
       let registeredAt = null;
@@ -58,14 +64,12 @@
         }
       });
 
-      // ✅ NaN対策（1件しかない場合など）
       if (!serialNumber && allDocs.size === 1) {
         serialNumber = 1;
         registeredAt = allDocs.docs[0].data().registeredAt;
       }
 
-      // ❌ それでも見つからなければエラーモード
-      if (!serialNumber) {
+      if (!serialNumber || !registeredAt) {
         document.getElementById("serial").innerText = "会員証 No: 不明";
         document.getElementById("name").innerText = `名前: ${profile.displayName}`;
         document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
@@ -74,11 +78,10 @@
         return;
       }
 
-      // ✅ 表示反映
       document.getElementById("serial").innerText = `会員証 No: #${String(serialNumber).padStart(4, "0")}`;
       document.getElementById("name").innerText = `名前: ${profile.displayName}`;
       document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
-      document.getElementById("timestamp").innerText = `登録日時: ${new Date(registeredAt).toLocaleString()}`;
+      document.getElementById("timestamp").innerText = `登録日時: ${registeredAt.toDate().toLocaleString()}`;
       document.getElementById("profileImg").src = profile.pictureUrl;
     }
 
