@@ -1,26 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
   <meta charset="UTF-8" />
   <title>OpenWorld 会員証</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      addDoc,
-      getDocs,
-      query,
-      orderBy,
-      where
-    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, Timestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDwqG7to68d7O9KQ2EPWaUD1UFm_Cq9HXo",
       authDomain: "openworld-liff.firebaseapp.com",
       projectId: "openworld-liff",
-      storageBucket: "openworld-liff.firebasestorage.app",
+      storageBucket: "openworld-liff.appspot.com",
       messagingSenderId: "79997022356",
       appId: "1:79997022356:web:89e7081d808bc5fc418481",
       measurementId: "G-SRK6BVFDYN"
@@ -40,8 +32,6 @@
       const profile = await liff.getProfile();
       const userId = profile.userId;
 
-      console.log("Logged in userId:", userId);
-
       const q = query(collection(db, "members"), where("userId", "==", userId));
       const snapshot = await getDocs(q);
 
@@ -50,39 +40,28 @@
           userId: userId,
           displayName: profile.displayName,
           pictureUrl: profile.pictureUrl,
-          registeredAt: new Date()
+          registeredAt: Timestamp.fromDate(new Date())
         });
-        console.log("New user added:", userId);
       }
 
       const allDocs = await getDocs(query(collection(db, "members"), orderBy("registeredAt")));
-
       let serialNumber = null;
       let registeredAt = null;
 
       allDocs.forEach((doc, index) => {
         const data = doc.data();
-        console.log("doc.id:", doc.id);
-        console.log("data.userId:", data.userId, "| type:", typeof data.userId);
-        console.log("profile.userId:", userId, "| type:", typeof userId);
-
         if (String(data.userId).trim() === String(userId).trim()) {
           serialNumber = index + 1;
           registeredAt = data.registeredAt;
-          console.log("Found matching user:", serialNumber, registeredAt);
         }
       });
-
-      console.log("allDocs size:", allDocs.size);
 
       if (!serialNumber && allDocs.size === 1) {
         serialNumber = 1;
         registeredAt = allDocs.docs[0].data().registeredAt;
-        console.log("Only one user in DB, assigned serialNumber=1");
       }
 
       if (!serialNumber || !registeredAt) {
-        console.warn("User serialNumber or registeredAt not found");
         document.getElementById("serial").innerText = "会員証 No: 不明";
         document.getElementById("name").innerText = `名前: ${profile.displayName}`;
         document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
@@ -92,7 +71,7 @@
       }
 
       let displayTime = null;
-      if (registeredAt?.toDate) {
+      if (registeredAt instanceof Timestamp) {
         displayTime = registeredAt.toDate().toLocaleString();
       } else {
         displayTime = new Date(registeredAt).toLocaleString();
