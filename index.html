@@ -78,10 +78,18 @@
         return;
       }
 
+      // toDate() の有無で分岐し、安全に日時を取得
+      let displayTime = null;
+      if (registeredAt?.toDate) {
+        displayTime = registeredAt.toDate().toLocaleString();
+      } else {
+        displayTime = new Date(registeredAt).toLocaleString();
+      }
+
       document.getElementById("serial").innerText = `会員証 No: #${String(serialNumber).padStart(4, "0")}`;
       document.getElementById("name").innerText = `名前: ${profile.displayName}`;
       document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
-      document.getElementById("timestamp").innerText = `登録日時: ${registeredAt.toDate().toLocaleString()}`;
+      document.getElementById("timestamp").innerText = `登録日時: ${displayTime}`;
       document.getElementById("profileImg").src = profile.pictureUrl;
     }
 
