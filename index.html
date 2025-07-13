@@ -61,6 +61,8 @@
         if (data.userId?.trim() === userId.trim()) {
           serialNumber = index + 1;
           registeredAt = data.registeredAt;
+          // ここでconsoleにもデバッグ表示
+          console.log("Found User Data:", { serialNumber, registeredAt });
         }
       });
 
@@ -78,13 +80,20 @@
         return;
       }
 
-      // toDate() の有無で分岐し、安全に日時を取得
-      let displayTime = null;
-      if (registeredAt?.toDate) {
-        displayTime = registeredAt.toDate().toLocaleString();
-      } else {
-        displayTime = new Date(registeredAt).toLocaleString();
+      // 日時を安全に取得
+      let displayTime = "不明";
+      if (registeredAt) {
+        if (typeof registeredAt.toDate === "function") {
+          displayTime = registeredAt.toDate().toLocaleString();
+        } else if (registeredAt instanceof Date) {
+          displayTime = registeredAt.toLocaleString();
+        } else if (typeof registeredAt === "string") {
+          displayTime = new Date(registeredAt).toLocaleString();
+        }
       }
+
+      // デバッグ用の画面表示
+      document.getElementById("debug").innerText = `【DEBUG】serialNumber: ${serialNumber}\nregisteredAt raw: ${JSON.stringify(registeredAt)}`;
 
       document.getElementById("serial").innerText = `会員証 No: #${String(serialNumber).padStart(4, "0")}`;
       document.getElementById("name").innerText = `名前: ${profile.displayName}`;
@@ -103,5 +112,6 @@
   <p id="userId">ユーザーID: 取得中...</p>
   <p id="timestamp">登録日時: 取得中...</p>
   <img id="profileImg" style="width: 150px; border-radius: 50%;" />
+  <pre id="debug" style="white-space: pre-wrap; background:#eee; padding:10px; border:1px solid #ccc; margin-top: 20px;"></pre>
 </body>
 </html>
