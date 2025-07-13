@@ -4,18 +4,26 @@
   <meta charset="UTF-8" />
   <title>OpenWorld 会員証</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <h1>OpenWorld 会員証</h1>
+  <img id="profileImg" width="100" />
+  <p id="name">ユーザー名: </p>
+  <p id="userId">ユーザーID: </p>
+  <p id="serial">会員番号: </p>
+  <p id="timestamp">登録日時: </p>
+
   <script type="module">
-    // Firebase SDKのインポート
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs, orderBy, addDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyDwqG7ot6d8d70gKQ2EPWAuD1UFm_Cq9HXo",
+      apiKey: "AIzaSyDwqG7to68d7O9KQ2EPWaUD1UFm_Cq9HXo",
       authDomain: "openworld-liff.firebaseapp.com",
       projectId: "openworld-liff",
-      storageBucket: "openworld-liff.appspot.com",
+      storageBucket: "openworld-liff.firebasestorage.app",
       messagingSenderId: "79997022356",
-      appId: "1:79997022356:web:98e70d18d80b85cfc418481",
+      appId: "1:79997022356:web:89e7081d808bc5fc418481",
       measurementId: "G-SRK6BVFDYN"
     };
 
@@ -27,52 +35,49 @@
 
       if (!liff.isLoggedIn()) {
         liff.login();
-      } else {
-        const profile = await liff.getProfile();
-        const userId = profile.userId;
-        const name = profile.displayName;
-
-        // Firestoreに既に登録済みか確認
-        const usersRef = collection(db, "members");
-        const q = query(usersRef, where("userId", "==", userId));
-        const snapshot = await getDocs(q);
-
-        let serial, createdAt;
-
-        if (snapshot.empty) {
-          // 新規登録 → シリアル番号は件数 + 1
-          const allUsersSnap = await getDocs(query(usersRef, orderBy("timestamp")));
-          serial = allUsersSnap.size + 1;
-          createdAt = new Date().toISOString();
-
-          await addDoc(usersRef, {
-            userId,
-            displayName: name,
-            timestamp: createdAt,
-            serial
-          });
-        } else {
-          const data = snapshot.docs[0].data();
-          serial = data.serial;
-          createdAt = data.timestamp;
-        }
-
-        // HTMLに反映
-        document.getElementById("name").innerText = `ユーザー名: ${name}`;
-        document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
-        document.getElementById("serial").innerText = `シリアル番号: #${String(serial).padStart(5, "0")}`;
-        document.getElementById("timestamp").innerText = `登録日時: ${createdAt}`;
+        return;
       }
+
+      const profile = await liff.getProfile();
+      const userId = profile.userId;
+
+      const membersRef = collection(db, "members");
+      const q = query(membersRef, where("userId", "==", userId));
+      const existing = await getDocs(q);
+
+      let data;
+      if (existing.empty) {
+        const all = await getDocs(query(membersRef, orderBy("createdAt")));
+        const serialNumber = all.size + 1;
+        const createdAt = new Date();
+
+        const docRef = await addDoc(membersRef, {
+          userId: userId,
+          displayName: profile.displayName,
+          pictureUrl: profile.pictureUrl,
+          createdAt: createdAt,
+          serialNumber: serialNumber
+        });
+
+        data = {
+          userId,
+          displayName: profile.displayName,
+          pictureUrl: profile.pictureUrl,
+          createdAt,
+          serialNumber
+        };
+      } else {
+        data = existing.docs[0].data();
+      }
+
+      document.getElementById("profileImg").src = data.pictureUrl;
+      document.getElementById("name").innerText = "ユーザー名: " + data.displayName;
+      document.getElementById("userId").innerText = "ユーザーID: " + data.userId;
+      document.getElementById("serial").innerText = "会員番号: #" + String(data.serialNumber).padStart(4, "0");
+      document.getElementById("timestamp").innerText = "登録日時: " + new Date(data.createdAt.seconds ? data.createdAt.seconds * 1000 : data.createdAt).toLocaleString();
     }
 
     main();
   </script>
-</head>
-<body>
-  <h1>OpenWorld 会員証</h1>
-  <p id="name">ユーザー名: 取得中...</p>
-  <p id="userId">ユーザーID: </p>
-  <p id="serial">シリアル番号: </p>
-  <p id="timestamp">登録日時: </p>
 </body>
 </html>
