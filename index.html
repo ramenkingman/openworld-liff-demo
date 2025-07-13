@@ -3,26 +3,81 @@
 <head>
   <meta charset="UTF-8" />
   <title>OpenWorld 会員証</title>
+  <!-- LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
 </head>
 <body>
   <h1>OpenWorld 会員証</h1>
+  <p id="serial">シリアル番号: </p>
   <p id="name">ユーザー名: 取得中...</p>
   <p id="userId">ユーザーID: </p>
+  <p id="created">登録日時: </p>
+  <img id="pic" style="width: 100px;" />
   <img id="qr" style="width: 200px;" />
 
   <script>
+    // ✅ Firebase 設定：※↓自分の Firebase プロジェクト設定からコピーして貼り付けてください
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Firebase 初期化
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Firestore にユーザー登録
+    async function registerUser(profile) {
+      const membersRef = db.collection("members");
+      const snapshot = await membersRef.where("userId", "==", profile.userId).get();
+
+      let docRef;
+      if (snapshot.empty) {
+        const serialSnap = await membersRef.orderBy("createdAt").get();
+        const serialNumber = serialSnap.size + 1;
+
+        docRef = await membersRef.add({
+          displayName: profile.displayName,
+          userId: profile.userId,
+          pictureUrl: profile.pictureUrl,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          serialNumber: serialNumber
+        });
+      } else {
+        docRef = snapshot.docs[0].ref;
+      }
+
+      const userDoc = await docRef.get();
+      return userDoc.data();
+    }
+
+    // LIFF起動と表示処理
     async function main() {
-      await liff.init({ liffId: "2007741116-ljZP4eGp" }); // ←ココを修正
+      await liff.init({ liffId: "2007741116-ljZP4eGp" });
+
       if (!liff.isLoggedIn()) {
         liff.login();
       } else {
         const profile = await liff.getProfile();
-        document.getElementById("name").innerText = "ユーザー名: " + profile.displayName;
-        document.getElementById("userId").innerText = "ユーザーID: " + profile.userId;
-        document.getElementById("qr").src = `https://api.qrserver.com/v1/create-qr-code/?data=${profile.userId}&size=200x200`;
+        const data = await registerUser(profile);
+
+        document.getElementById("serial").innerText = "シリアル番号: #" + data.serialNumber.toString().padStart(4, "0");
+        document.getElementById("name").innerText = "ユーザー名: " + data.displayName;
+        document.getElementById("userId").innerText = "ユーザーID: " + data.userId;
+        document.getElementById("created").innerText = "登録日時: " + (data.createdAt?.toDate().toLocaleString() || "取得中...");
+        document.getElementById("pic").src = data.pictureUrl;
+        document.getElementById("qr").src = `https://api.qrserver.com/v1/create-qr-code/?data=${data.userId}&size=200x200`;
       }
     }
+
     main();
   </script>
 </body>
