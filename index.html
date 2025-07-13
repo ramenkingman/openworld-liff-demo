@@ -32,6 +32,7 @@
       const profile = await liff.getProfile();
       const userId = profile.userId;
 
+      // 🔍 すでに登録済みか確認
       const q = query(collection(db, "members"), where("userId", "==", userId));
       const snapshot = await getDocs(q);
 
@@ -44,23 +45,27 @@
         });
       }
 
+      // 🔄 登録順を取得
       const allDocs = await getDocs(query(collection(db, "members"), orderBy("registeredAt")));
-
-      let serialNumber = 0;
+      let serialNumber = null;
       let registeredAt = null;
-      let found = false;
 
       allDocs.forEach((doc, index) => {
         const data = doc.data();
-        if (data.userId === userId) {
+        if (data.userId?.trim() === userId.trim()) {
           serialNumber = index + 1;
           registeredAt = data.registeredAt;
-          found = true;
         }
       });
 
-      if (!found) {
-        // 念のためエラー時表示
+      // ✅ NaN対策（1件しかない場合など）
+      if (!serialNumber && allDocs.size === 1) {
+        serialNumber = 1;
+        registeredAt = allDocs.docs[0].data().registeredAt;
+      }
+
+      // ❌ それでも見つからなければエラーモード
+      if (!serialNumber) {
         document.getElementById("serial").innerText = "会員証 No: 不明";
         document.getElementById("name").innerText = `名前: ${profile.displayName}`;
         document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
@@ -69,7 +74,7 @@
         return;
       }
 
-      // 表示反映
+      // ✅ 表示反映
       document.getElementById("serial").innerText = `会員証 No: #${String(serialNumber).padStart(4, "0")}`;
       document.getElementById("name").innerText = `名前: ${profile.displayName}`;
       document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
