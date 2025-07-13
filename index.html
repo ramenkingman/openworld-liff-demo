@@ -4,19 +4,12 @@
   <meta charset="UTF-8" />
   <title>OpenWorld 会員証</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-</head>
-<body>
-  <h1>OpenWorld 会員証</h1>
-  <img id="profileImg" width="100" />
-  <p id="name">ユーザー名: </p>
-  <p id="userId">ユーザーID: </p>
-  <p id="serial">会員番号: </p>
-  <p id="timestamp">登録日時: </p>
-
   <script type="module">
+    // Firebase SDKのインポート
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs, orderBy, addDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
+    // Firebase設定
     const firebaseConfig = {
       apiKey: "AIzaSyDwqG7to68d7O9KQ2EPWaUD1UFm_Cq9HXo",
       authDomain: "openworld-liff.firebaseapp.com",
@@ -27,9 +20,11 @@
       measurementId: "G-SRK6BVFDYN"
     };
 
+    // 初期化
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // LIFF初期化 & Firestore登録
     async function main() {
       await liff.init({ liffId: "2007741116-ljZP4eGp" });
 
@@ -41,43 +36,59 @@
       const profile = await liff.getProfile();
       const userId = profile.userId;
 
-      const membersRef = collection(db, "members");
-      const q = query(membersRef, where("userId", "==", userId));
-      const existing = await getDocs(q);
+      // すでに登録されているか確認
+      const q = query(collection(db, "members"), where("userId", "==", userId));
+      const snapshot = await getDocs(q);
 
-      let data;
-      if (existing.empty) {
-        const all = await getDocs(query(membersRef, orderBy("createdAt")));
-        const serialNumber = all.size + 1;
-        const createdAt = new Date();
+      let docId = null;
+      let serialNumber = 0;
+      let registeredAt = null;
 
-        const docRef = await addDoc(membersRef, {
+      if (snapshot.empty) {
+        // 未登録 → 新規追加
+        const newDoc = await addDoc(collection(db, "members"), {
           userId: userId,
           displayName: profile.displayName,
           pictureUrl: profile.pictureUrl,
-          createdAt: createdAt,
-          serialNumber: serialNumber
+          registeredAt: new Date().toISOString()
         });
 
-        data = {
-          userId,
-          displayName: profile.displayName,
-          pictureUrl: profile.pictureUrl,
-          createdAt,
-          serialNumber
-        };
+        // 登録順に並べて何番目かを判定
+        const allDocs = await getDocs(query(collection(db, "members"), orderBy("registeredAt")));
+        allDocs.forEach((doc, index) => {
+          if (doc.id === newDoc.id) {
+            serialNumber = index + 1;
+            registeredAt = doc.data().registeredAt;
+          }
+        });
       } else {
-        data = existing.docs[0].data();
+        // 既に登録済み → シリアル番号算出
+        const allDocs = await getDocs(query(collection(db, "members"), orderBy("registeredAt")));
+        allDocs.forEach((doc, index) => {
+          if (doc.data().userId === userId) {
+            serialNumber = index + 1;
+            registeredAt = doc.data().registeredAt;
+          }
+        });
       }
 
-      document.getElementById("profileImg").src = data.pictureUrl;
-      document.getElementById("name").innerText = "ユーザー名: " + data.displayName;
-      document.getElementById("userId").innerText = "ユーザーID: " + data.userId;
-      document.getElementById("serial").innerText = "会員番号: #" + String(data.serialNumber).padStart(4, "0");
-      document.getElementById("timestamp").innerText = "登録日時: " + new Date(data.createdAt.seconds ? data.createdAt.seconds * 1000 : data.createdAt).toLocaleString();
+      // 表示
+      document.getElementById("serial").innerText = `会員証 No: #${String(serialNumber).padStart(4, "0")}`;
+      document.getElementById("name").innerText = `名前: ${profile.displayName}`;
+      document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
+      document.getElementById("timestamp").innerText = `登録日時: ${new Date(registeredAt).toLocaleString()}`;
+      document.getElementById("profileImg").src = profile.pictureUrl;
     }
 
     main();
   </script>
+</head>
+<body>
+  <h1>OpenWorld 会員証</h1>
+  <p id="serial">会員証 No: 取得中...</p>
+  <p id="name">名前: 取得中...</p>
+  <p id="userId">ユーザーID: 取得中...</p>
+  <p id="timestamp">登録日時: 取得中...</p>
+  <img id="profileImg" style="width: 150px; border-radius: 50%;" />
 </body>
 </html>
