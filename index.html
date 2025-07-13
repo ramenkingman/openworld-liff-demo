@@ -32,13 +32,12 @@
       const profile = await liff.getProfile();
       const userId = profile.userId;
 
-      let serialNumber = 0;
-      let registeredAt = null;
-
+      // 🔍 すでに登録済みか確認
       const q = query(collection(db, "members"), where("userId", "==", userId));
       const snapshot = await getDocs(q);
 
       if (snapshot.empty) {
+        // 🔄 登録されていなければ新規追加
         await addDoc(collection(db, "members"), {
           userId: userId,
           displayName: profile.displayName,
@@ -47,16 +46,21 @@
         });
       }
 
-      // 登録順取得＆シリアル番号決定
+      // ✅ すべての登録を時系列で取得して並べる
       const allDocs = await getDocs(query(collection(db, "members"), orderBy("registeredAt")));
+
+      let serialNumber = 0;
+      let registeredAt = null;
+
       allDocs.forEach((doc, index) => {
-        if (doc.data().userId === userId) {
+        const data = doc.data();
+        if (data.userId === userId) {
           serialNumber = index + 1;
-          registeredAt = doc.data().registeredAt;
+          registeredAt = data.registeredAt;
         }
       });
 
-      // 表示更新
+      // ✅ 表示反映
       document.getElementById("serial").innerText = `会員証 No: #${String(serialNumber).padStart(4, "0")}`;
       document.getElementById("name").innerText = `名前: ${profile.displayName}`;
       document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
