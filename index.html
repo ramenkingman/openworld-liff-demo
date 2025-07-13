@@ -3,63 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <title>OpenWorld 会員証</title>
-  <!-- LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script type="module">
+    // Firebase SDKのインポート
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
-</head>
-<body>
-  <h1>OpenWorld 会員証</h1>
-  <p id="serial">シリアル番号: </p>
-  <p id="name">ユーザー名: 取得中...</p>
-  <p id="userId">ユーザーID: </p>
-  <p id="created">登録日時: </p>
-  <img id="pic" style="width: 100px;" />
-  <img id="qr" style="width: 200px;" />
-
-  <script>
-    // ✅ Firebase 設定：※↓自分の Firebase プロジェクト設定からコピーして貼り付けてください
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyDwqG7ot6d8d70gKQ2EPWAuD1UFm_Cq9HXo",
+      authDomain: "openworld-liff.firebaseapp.com",
+      projectId: "openworld-liff",
+      storageBucket: "openworld-liff.appspot.com",
+      messagingSenderId: "79997022356",
+      appId: "1:79997022356:web:98e70d18d80b85cfc418481",
+      measurementId: "G-SRK6BVFDYN"
     };
 
-    // Firebase 初期化
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    // Firestore にユーザー登録
-    async function registerUser(profile) {
-      const membersRef = db.collection("members");
-      const snapshot = await membersRef.where("userId", "==", profile.userId).get();
-
-      let docRef;
-      if (snapshot.empty) {
-        const serialSnap = await membersRef.orderBy("createdAt").get();
-        const serialNumber = serialSnap.size + 1;
-
-        docRef = await membersRef.add({
-          displayName: profile.displayName,
-          userId: profile.userId,
-          pictureUrl: profile.pictureUrl,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          serialNumber: serialNumber
-        });
-      } else {
-        docRef = snapshot.docs[0].ref;
-      }
-
-      const userDoc = await docRef.get();
-      return userDoc.data();
-    }
-
-    // LIFF起動と表示処理
     async function main() {
       await liff.init({ liffId: "2007741116-ljZP4eGp" });
 
@@ -67,18 +29,50 @@
         liff.login();
       } else {
         const profile = await liff.getProfile();
-        const data = await registerUser(profile);
+        const userId = profile.userId;
+        const name = profile.displayName;
 
-        document.getElementById("serial").innerText = "シリアル番号: #" + data.serialNumber.toString().padStart(4, "0");
-        document.getElementById("name").innerText = "ユーザー名: " + data.displayName;
-        document.getElementById("userId").innerText = "ユーザーID: " + data.userId;
-        document.getElementById("created").innerText = "登録日時: " + (data.createdAt?.toDate().toLocaleString() || "取得中...");
-        document.getElementById("pic").src = data.pictureUrl;
-        document.getElementById("qr").src = `https://api.qrserver.com/v1/create-qr-code/?data=${data.userId}&size=200x200`;
+        // Firestoreに既に登録済みか確認
+        const usersRef = collection(db, "members");
+        const q = query(usersRef, where("userId", "==", userId));
+        const snapshot = await getDocs(q);
+
+        let serial, createdAt;
+
+        if (snapshot.empty) {
+          // 新規登録 → シリアル番号は件数 + 1
+          const allUsersSnap = await getDocs(query(usersRef, orderBy("timestamp")));
+          serial = allUsersSnap.size + 1;
+          createdAt = new Date().toISOString();
+
+          await addDoc(usersRef, {
+            userId,
+            displayName: name,
+            timestamp: createdAt,
+            serial
+          });
+        } else {
+          const data = snapshot.docs[0].data();
+          serial = data.serial;
+          createdAt = data.timestamp;
+        }
+
+        // HTMLに反映
+        document.getElementById("name").innerText = `ユーザー名: ${name}`;
+        document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
+        document.getElementById("serial").innerText = `シリアル番号: #${String(serial).padStart(5, "0")}`;
+        document.getElementById("timestamp").innerText = `登録日時: ${createdAt}`;
       }
     }
 
     main();
   </script>
+</head>
+<body>
+  <h1>OpenWorld 会員証</h1>
+  <p id="name">ユーザー名: 取得中...</p>
+  <p id="userId">ユーザーID: </p>
+  <p id="serial">シリアル番号: </p>
+  <p id="timestamp">登録日時: </p>
 </body>
 </html>
