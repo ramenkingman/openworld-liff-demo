@@ -40,6 +40,8 @@
       const profile = await liff.getProfile();
       const userId = profile.userId;
 
+      console.log("Logged in userId:", userId);
+
       const q = query(collection(db, "members"), where("userId", "==", userId));
       const snapshot = await getDocs(q);
 
@@ -50,28 +52,37 @@
           pictureUrl: profile.pictureUrl,
           registeredAt: new Date()
         });
+        console.log("New user added:", userId);
       }
 
       const allDocs = await getDocs(query(collection(db, "members"), orderBy("registeredAt")));
+
       let serialNumber = null;
       let registeredAt = null;
 
       allDocs.forEach((doc, index) => {
         const data = doc.data();
-        if (data.userId?.trim() === userId.trim()) {
+        console.log("doc.id:", doc.id);
+        console.log("data.userId:", data.userId, "| type:", typeof data.userId);
+        console.log("profile.userId:", userId, "| type:", typeof userId);
+
+        if (String(data.userId).trim() === String(userId).trim()) {
           serialNumber = index + 1;
           registeredAt = data.registeredAt;
-          // ここでconsoleにもデバッグ表示
-          console.log("Found User Data:", { serialNumber, registeredAt });
+          console.log("Found matching user:", serialNumber, registeredAt);
         }
       });
+
+      console.log("allDocs size:", allDocs.size);
 
       if (!serialNumber && allDocs.size === 1) {
         serialNumber = 1;
         registeredAt = allDocs.docs[0].data().registeredAt;
+        console.log("Only one user in DB, assigned serialNumber=1");
       }
 
       if (!serialNumber || !registeredAt) {
+        console.warn("User serialNumber or registeredAt not found");
         document.getElementById("serial").innerText = "会員証 No: 不明";
         document.getElementById("name").innerText = `名前: ${profile.displayName}`;
         document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
@@ -80,20 +91,12 @@
         return;
       }
 
-      // 日時を安全に取得
-      let displayTime = "不明";
-      if (registeredAt) {
-        if (typeof registeredAt.toDate === "function") {
-          displayTime = registeredAt.toDate().toLocaleString();
-        } else if (registeredAt instanceof Date) {
-          displayTime = registeredAt.toLocaleString();
-        } else if (typeof registeredAt === "string") {
-          displayTime = new Date(registeredAt).toLocaleString();
-        }
+      let displayTime = null;
+      if (registeredAt?.toDate) {
+        displayTime = registeredAt.toDate().toLocaleString();
+      } else {
+        displayTime = new Date(registeredAt).toLocaleString();
       }
-
-      // デバッグ用の画面表示
-      document.getElementById("debug").innerText = `【DEBUG】serialNumber: ${serialNumber}\nregisteredAt raw: ${JSON.stringify(registeredAt)}`;
 
       document.getElementById("serial").innerText = `会員証 No: #${String(serialNumber).padStart(4, "0")}`;
       document.getElementById("name").innerText = `名前: ${profile.displayName}`;
@@ -112,6 +115,5 @@
   <p id="userId">ユーザーID: 取得中...</p>
   <p id="timestamp">登録日時: 取得中...</p>
   <img id="profileImg" style="width: 150px; border-radius: 50%;" />
-  <pre id="debug" style="white-space: pre-wrap; background:#eee; padding:10px; border:1px solid #ccc; margin-top: 20px;"></pre>
 </body>
 </html>
