@@ -6,7 +6,17 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, Timestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      getDoc,
+      runTransaction,
+      addDoc,
+      query,
+      where,
+      getDocs,
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDwqG7to68d7O9KQ2EPWaUD1UFm_Cq9HXo",
@@ -32,56 +42,57 @@
       const profile = await liff.getProfile();
       const userId = profile.userId;
 
-      const q = query(collection(db, "members"), where("userId", "==", userId));
+      // まず既存ユーザーかどうか確認
+      const membersRef = collection(db, "members");
+      const q = query(membersRef, where("userId", "==", userId));
       const snapshot = await getDocs(q);
 
       if (snapshot.empty) {
-        await addDoc(collection(db, "members"), {
-          userId: userId,
-          displayName: profile.displayName,
-          pictureUrl: profile.pictureUrl,
-          registeredAt: Timestamp.fromDate(new Date())
+        // 新規ユーザーの場合、トランザクションで連番を発行して会員登録
+        const countersDocRef = doc(db, "counters", "members");
+
+        await runTransaction(db, async (transaction) => {
+          const counterDoc = await transaction.get(countersDocRef);
+
+          let newSerial = 1;
+          if (counterDoc.exists()) {
+            const data = counterDoc.data();
+            newSerial = (data.lastSerial || 0) + 1;
+          } else {
+            // counters/members ドキュメントがなければ作る
+            transaction.set(countersDocRef, { lastSerial: 0 });
+          }
+
+          // counters/members の lastSerial を更新
+          transaction.update(countersDocRef, { lastSerial: newSerial });
+
+          // 新規メンバーを登録
+          const newMemberRef = doc(membersRef); // 自動ID生成
+          transaction.set(newMemberRef, {
+            userId: userId,
+            displayName: profile.displayName,
+            pictureUrl: profile.pictureUrl,
+            registeredAt: new Date(),
+            memberNo: newSerial,  // ここに連番をセット
+          });
         });
       }
 
-      const allDocs = await getDocs(query(collection(db, "members"), orderBy("registeredAt")));
-      let serialNumber = null;
-      let registeredAt = null;
-
-      allDocs.forEach((doc, index) => {
-        const data = doc.data();
-        if (String(data.userId).trim() === String(userId).trim()) {
-          serialNumber = index + 1;
-          registeredAt = data.registeredAt;
-        }
-      });
-
-      if (!serialNumber && allDocs.size === 1) {
-        serialNumber = 1;
-        registeredAt = allDocs.docs[0].data().registeredAt;
-      }
-
-      if (!serialNumber || !registeredAt) {
-        document.getElementById("serial").innerText = "会員証 No: 不明";
-        document.getElementById("name").innerText = `名前: ${profile.displayName}`;
-        document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
-        document.getElementById("timestamp").innerText = `登録日時: 不明`;
-        document.getElementById("profileImg").src = profile.pictureUrl;
+      // 既存ユーザーもしくは登録完了後のユーザー情報を取得
+      const allDocs = await getDocs(query(collection(db, "members"), where("userId", "==", userId)));
+      if (allDocs.empty) {
+        alert("ユーザー情報が見つかりません");
         return;
       }
+      const userDoc = allDocs.docs[0];
+      const data = userDoc.data();
 
-      let displayTime = null;
-      if (registeredAt instanceof Timestamp) {
-        displayTime = registeredAt.toDate().toLocaleString();
-      } else {
-        displayTime = new Date(registeredAt).toLocaleString();
-      }
-
-      document.getElementById("serial").innerText = `会員証 No: #${String(serialNumber).padStart(4, "0")}`;
-      document.getElementById("name").innerText = `名前: ${profile.displayName}`;
+      // 表示反映
+      document.getElementById("serial").innerText = data.memberNo ? `会員証 No: #${String(data.memberNo).padStart(4, "0")}` : "会員証 No: 不明";
+      document.getElementById("name").innerText = `名前: ${data.displayName || profile.displayName}`;
       document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
-      document.getElementById("timestamp").innerText = `登録日時: ${displayTime}`;
-      document.getElementById("profileImg").src = profile.pictureUrl;
+      document.getElementById("timestamp").innerText = `登録日時: ${data.registeredAt ? new Date(data.registeredAt.seconds * 1000).toLocaleString() : "不明"}`;
+      document.getElementById("profileImg").src = data.pictureUrl || profile.pictureUrl;
     }
 
     main();
