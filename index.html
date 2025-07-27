@@ -3,7 +3,76 @@
 <head>
   <meta charset="UTF-8" />
   <title>OpenWorld 会員証</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background-color: #f0f0f0;
+    }
+
+    .card-container {
+      position: relative;
+      max-width: 430px;
+      margin: 0 auto;
+    }
+
+    .card-bg {
+      width: 100%;
+      display: block;
+    }
+
+    .card-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      box-sizing: border-box;
+      color: #000;
+      text-shadow: 1px 1px 2px #fff;
+    }
+
+    .card-overlay h1 {
+      font-size: 20px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+
+    .card-overlay p {
+      margin: 5px 0;
+      font-size: 16px;
+    }
+
+    .profile-img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-top: 10px;
+      border: 3px solid #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="card-container">
+    <img
+      class="card-bg"
+      src="https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/S__25624874_0.jpg?alt=media&token=795d38e8-dac6-4942-8b05-535384f8f81a"
+      alt="背景画像"
+    />
+    <div class="card-overlay">
+      <h1>OpenWorld 会員証</h1>
+      <p id="serial">会員証 No: 取得中...</p>
+      <p id="name">名前: 取得中...</p>
+      <p id="timestamp">登録日時: 取得中...</p>
+      <img id="profileImg" class="profile-img" src="" alt="プロフィール画像">
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import {
@@ -12,7 +81,6 @@
       doc,
       getDoc,
       runTransaction,
-      addDoc,
       query,
       where,
       getDocs,
@@ -42,68 +110,55 @@
       const profile = await liff.getProfile();
       const userId = profile.userId;
 
-      // まず既存ユーザーかどうか確認
       const membersRef = collection(db, "members");
       const q = query(membersRef, where("userId", "==", userId));
       const snapshot = await getDocs(q);
 
       if (snapshot.empty) {
-        // 新規ユーザーの場合、トランザクションで連番を発行して会員登録
         const countersDocRef = doc(db, "counters", "members");
 
         await runTransaction(db, async (transaction) => {
           const counterDoc = await transaction.get(countersDocRef);
-
           let newSerial = 1;
           if (counterDoc.exists()) {
             const data = counterDoc.data();
             newSerial = (data.lastSerial || 0) + 1;
           } else {
-            // counters/members ドキュメントがなければ作る
             transaction.set(countersDocRef, { lastSerial: 0 });
           }
 
-          // counters/members の lastSerial を更新
           transaction.update(countersDocRef, { lastSerial: newSerial });
 
-          // 新規メンバーを登録
-          const newMemberRef = doc(membersRef); // 自動ID生成
+          const newMemberRef = doc(membersRef);
           transaction.set(newMemberRef, {
             userId: userId,
             displayName: profile.displayName,
             pictureUrl: profile.pictureUrl,
             registeredAt: new Date(),
-            memberNo: newSerial,  // ここに連番をセット
+            memberNo: newSerial,
           });
         });
       }
 
-      // 既存ユーザーもしくは登録完了後のユーザー情報を取得
       const allDocs = await getDocs(query(collection(db, "members"), where("userId", "==", userId)));
       if (allDocs.empty) {
         alert("ユーザー情報が見つかりません");
         return;
       }
+
       const userDoc = allDocs.docs[0];
       const data = userDoc.data();
 
-      // 表示反映
-      document.getElementById("serial").innerText = data.memberNo ? `会員証 No: #${String(data.memberNo).padStart(4, "0")}` : "会員証 No: 不明";
-      document.getElementById("name").innerText = `名前: ${data.displayName || profile.displayName}`;
-      document.getElementById("userId").innerText = `ユーザーID: ${userId}`;
-      document.getElementById("timestamp").innerText = `登録日時: ${data.registeredAt ? new Date(data.registeredAt.seconds * 1000).toLocaleString() : "不明"}`;
-      document.getElementById("profileImg").src = data.pictureUrl || profile.pictureUrl;
+      document.getElementById("serial").innerText =
+        `会員証 No: #${String(data.memberNo).padStart(4, "0")}`;
+      document.getElementById("name").innerText = `名前: ${data.displayName}`;
+      document.getElementById("timestamp").innerText =
+        `登録日時: ${data.registeredAt ? new Date(data.registeredAt.seconds * 1000).toLocaleString() : "不明"}`;
+      document.getElementById("profileImg").src =
+        data.pictureUrl || profile.pictureUrl;
     }
 
     main();
   </script>
-</head>
-<body>
-  <h1>OpenWorld 会員証</h1>
-  <p id="serial">会員証 No: 取得中...</p>
-  <p id="name">名前: 取得中...</p>
-  <p id="userId">ユーザーID: 取得中...</p>
-  <p id="timestamp">登録日時: 取得中...</p>
-  <img id="profileImg" style="width: 150px; border-radius: 50%;" />
 </body>
 </html>
