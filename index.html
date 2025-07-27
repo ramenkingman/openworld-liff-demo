@@ -41,17 +41,27 @@
       font-weight: bold;
     }
 
-    .card-overlay p {
+    .info-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .info-text {
+      flex: 1;
+    }
+
+    .info-text p {
       margin: 5px 0;
       font-size: 16px;
     }
 
     .profile-img {
-      width: 100px;
-      height: 100px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
       object-fit: cover;
-      margin-top: 10px;
       border: 3px solid #fff;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
@@ -66,10 +76,14 @@
     />
     <div class="card-overlay">
       <h1>OpenWorld 会員証</h1>
-      <p id="serial">会員証 No: 取得中...</p>
-      <p id="name">名前: 取得中...</p>
-      <p id="timestamp">登録日時: 取得中...</p>
-      <img id="profileImg" class="profile-img" src="" alt="プロフィール画像">
+      <div class="info-row">
+        <div class="info-text">
+          <p id="serial">会員証 No: 取得中...</p>
+          <p id="name">名前: 取得中...</p>
+          <p id="timestamp">登録日時: 取得中...</p>
+        </div>
+        <img id="profileImg" class="profile-img" src="" alt="プロフィール画像">
+      </div>
     </div>
   </div>
 
@@ -79,7 +93,6 @@
       getFirestore,
       collection,
       doc,
-      getDoc,
       runTransaction,
       query,
       where,
