@@ -6,9 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    :root{
-      --panel-radius: 18px;
-    }
+    :root{ --panel-radius: 18px; }
     *{ box-sizing: border-box; }
     body{
       margin:0;
@@ -32,15 +30,20 @@
       pointer-events:none; user-select:none;
     }
 
-    /* 上部カード画像 */
+    /* 上部カード画像（★修正：黒背景削除・imgに角丸継承） */
     .hero-card{
-      width:100%; aspect-ratio:16/9;
-      border-radius:16px; overflow:hidden;
+      width:100%;
+      aspect-ratio:16/9;
+      border-radius:16px;
+      overflow:hidden;                     /* 角丸でクリップ */
       box-shadow:0 12px 30px rgba(0,0,0,.45);
-      background:#000 center/cover no-repeat;
       margin-bottom:56px;
     }
-    .hero-card img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .hero-card img{
+      width:100%; height:100%;
+      object-fit:cover; display:block;
+      border-radius:inherit;               /* 画像にも角丸を適用 */
+    }
 
     /* 情報カード＋丸アイコン */
     .profile-stack{ position:relative; }
@@ -111,7 +114,7 @@
       getFirestore, collection, doc, runTransaction, query, where, getDocs, Timestamp
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-    /* 画像URL（提供のものを使用） */
+    /* 画像URL */
     const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/Header.png?alt=media&token=44229293-82db-4a55-bef3-c656bb9e7845";
     const CARD_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/Card.png?alt=media&token=2b4be783-84b7-4dd7-aed1-199d0172617c";
 
@@ -128,7 +131,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 初期画像セット（DOMはもうある）
+    // 初期画像セット
     document.getElementById("logo").src = LOGO_URL;
     document.getElementById("heroImg").src = CARD_IMAGE_URL;
 
@@ -146,20 +149,16 @@
     }
 
     async function main(){
-      // LIFF 初期化＆ログイン
       await liff.init({ liffId: "2007741116-ljZP4eGp" });
       if (!liff.isLoggedIn()) { liff.login(); return; }
 
-      // LINEプロフィール取得
       const profile = await liff.getProfile();
       const userId = profile.userId;
 
-      // Firestore: 既存チェック
       const membersRef = collection(db,"members");
       const qExist = query(membersRef, where("userId","==", userId));
       const existSnap = await getDocs(qExist);
 
-      // 未登録なら連番払い出し＆登録
       if (existSnap.empty){
         const counterRef = doc(db,"counters","members");
         await runTransaction(db, async(tx)=>{
@@ -182,18 +181,15 @@
         });
       }
 
-      // 再取得して画面に反映
       const snap = await getDocs(query(membersRef, where("userId","==", userId)));
       if (snap.empty){ alert("ユーザー情報が見つかりません"); return; }
       const data = snap.docs[0].data();
 
-      // 値のセット（ラベル左／値右）
       document.getElementById("serialValue").textContent = `#${pad5(data.memberNo)}`;
       document.getElementById("nameValue").textContent   = data.displayName ?? profile.displayName ?? "—";
       const d = toDateMaybe(data.registeredAt);
       document.getElementById("dateValue").textContent   = d ? fmtYMD(d) : "—";
 
-      // プロフィール画像
       document.getElementById("avatar").src = (data.pictureUrl || profile.pictureUrl || "");
     }
 
