@@ -17,7 +17,14 @@
       font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
       color:#fff;
       min-height:100svh;
-      background: radial-gradient(1200px 700px at 50% -200px, #3a3a3a 0%, #222 40%, #111 100%);
+
+      /* ★ グラデーション背景（#535353ベース）に変更 */
+      background: radial-gradient(
+        1200px 700px at 50% -200px,
+        #7a7a7a 0%,   /* 上: 少し明るめ */
+        #535353 40%,  /* 中央: ベース色 */
+        #2e2e2e 100%  /* 下: 暗め */
+      );
     }
     .wrap{
       max-width:460px;
@@ -99,7 +106,6 @@
       <div class="info-card">
         <div class="row">
           <div class="label">Member ID</div>
-          <!-- 値だけ差し替える -->
           <div id="serialValue" class="value mono">#00000</div>
         </div>
 
@@ -122,10 +128,9 @@
       getFirestore, collection, doc, runTransaction, query, where, getDocs, Timestamp
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-    // ==== 画像URL（あなたがくれたURL） ====
+    // 画像URL
     const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/Frame%206.png?alt=media&token=a744ed7e-1016-49ed-ae95-aa6d97ccf12e";
     const CARD_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/Card.png?alt=media&token=2b4be783-84b7-4dd7-aed1-199d0172617c";
-    // =====================================
 
     const firebaseConfig = {
       apiKey: "AIzaSyDwqG7to68d7O9KQ2EPWaUD1UFm_Cq9HXo",
@@ -144,7 +149,6 @@
     document.getElementById("logo").src = LOGO_URL;
     document.getElementById("heroImg").src = CARD_IMAGE_URL;
 
-    // 表示フォーマッタ
     const pad5 = (n)=> String(n ?? 0).padStart(5,"0");
     const fmtYMD = (d)=>{
       const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
@@ -190,18 +194,16 @@
         });
       }
 
-      // 再取得して画面へ
       const snap = await getDocs(query(membersRef, where("userId","==",userId)));
       if (snap.empty){ alert("ユーザー情報が見つかりません"); return; }
       const data = snap.docs[0].data();
 
-      // 新レイアウト用の値
       document.getElementById("serialValue").textContent = `#${pad5(data.memberNo)}`;
       document.getElementById("nameValue").textContent   = data.displayName ?? profile.displayName ?? "—";
       const d = toDateMaybe(data.registeredAt);
       document.getElementById("dateValue").textContent   = d ? fmtYMD(d) : "—";
 
-      // 念のため旧IDにも反映（互換保持）
+      // 互換（旧IDが残ってる場合に備え）
       const serialOld = document.getElementById("serial");
       if (serialOld) serialOld.innerText = `会員証 No: #${pad5(data.memberNo)}`;
       const nameOld = document.getElementById("name");
@@ -209,7 +211,6 @@
       const tsOld = document.getElementById("timestamp");
       if (tsOld) tsOld.innerText = `登録日時: ${d ? d.toLocaleString() : "—"}`;
 
-      // プロフィール画像
       document.getElementById("avatar").src = (data.pictureUrl || profile.pictureUrl || "");
       const profileImgCompat = document.getElementById("profileImg");
       if (profileImgCompat) profileImgCompat.src = (data.pictureUrl || profile.pictureUrl || "");
