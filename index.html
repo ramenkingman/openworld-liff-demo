@@ -11,55 +11,67 @@
       font-family: sans-serif;
       background-color: #f0f0f0;
     }
+
     .card-container {
       position: relative;
       max-width: 430px;
       margin: 0 auto;
     }
+
     .card-bg {
       width: 100%;
       display: block;
     }
+
     .card-overlay {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       padding: 20px;
       box-sizing: border-box;
       color: #000;
       text-shadow: 1px 1px 2px #fff;
     }
-    /* 左上ロゴ */
-    .logo-img{
+
+    /* 左上ロゴ（追加） */
+    .logo-img {
       position: absolute;
-      top: 14px; left: 14px;
+      top: 14px;
+      left: 14px;
       width: 160px;
       height: auto;
       display: block;
       pointer-events: none;
       user-select: none;
     }
+
     .card-overlay h1 {
       font-size: 20px;
       margin: 10px 0;
       font-weight: bold;
-      padding-left: 0; /* ロゴと重ならない位置に調整する場合はここを変更 */
-      visibility: hidden; /* タイトルを非表示に（ロゴに置き換え） */
-      height: 0;
-      margin: 0;
+      /* ロゴに置き換えるなら下の2行を有効化（見出しを隠す） */
+      /* visibility: hidden;
+      height: 0; margin: 0; */
     }
+
     .info-row {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
       gap: 12px;
-      margin-top: 64px; /* ロゴ分の上余白 */
     }
-    .info-text { flex: 1; }
+
+    .info-text {
+      flex: 1;
+    }
+
     .info-text p {
       margin: 5px 0;
       font-size: 16px;
     }
+
     .profile-img {
       width: 80px;
       height: 80px;
@@ -72,20 +84,16 @@
 </head>
 <body>
   <div class="card-container">
-    <!-- カード画像（背景） -->
     <img
-      id="cardBg"
       class="card-bg"
-      src=""
+      src="https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/S__25624874_0.jpg?alt=media&token=795d38e8-dac6-4942-8b05-535384f8f81a"
       alt="背景画像"
     />
-
-    <!-- オーバーレイ（ロゴ＋テキスト） -->
     <div class="card-overlay">
-      <!-- 左上ロゴ -->
+      <!-- 左上ロゴ（追加） -->
       <img id="logo" class="logo-img" alt="Logo">
-      <h1>OpenWorld 会員証</h1>
 
+      <h1>OpenWorld 会員証</h1>
       <div class="info-row">
         <div class="info-text">
           <p id="serial">会員証 No: 取得中...</p>
@@ -100,13 +108,18 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import {
-      getFirestore, collection, doc, runTransaction, query, where, getDocs, Timestamp
+      getFirestore,
+      collection,
+      doc,
+      runTransaction,
+      query,
+      where,
+      getDocs,
+      Timestamp
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-    // ==== Firebase Storage 公開URL（あなたがくれたURL） ====
+    // 追加：ロゴURL（あなたがくれた公開URL）
     const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/Frame%206.png?alt=media&token=a744ed7e-1016-49ed-ae95-aa6d97ccf12e";
-    const CARD_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/Card.png?alt=media&token=2b4be783-84b7-4dd7-aed1-199d0172617c";
-    // =====================================================
 
     const firebaseConfig = {
       apiKey: "AIzaSyDwqG7to68d7O9KQ2EPWaUD1UFm_Cq9HXo",
@@ -121,97 +134,80 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // DOMの準備ができてから実行（未定義要素アクセスで落ちないように）
-    window.addEventListener("DOMContentLoaded", () => {
-      const logoEl = document.getElementById("logo");
-      if (logoEl) logoEl.src = LOGO_URL;
+    // ロゴを即セット（このスクリプトは</body>直前なので要素は既に存在）
+    const logoEl = document.getElementById("logo");
+    if (logoEl) logoEl.src = LOGO_URL;
 
-      const bgEl = document.getElementById("cardBg");
-      if (bgEl) bgEl.src = CARD_IMAGE_URL;
-
-      main().catch(err => {
-        console.error(err);
-        alert("初期化で問題が発生しました。コンソールを確認してください。");
-      });
-    });
-
-    function pad5(n){ return String(n ?? 0).padStart(5, "0"); }
-    function fmtDate(d){
-      const y = d.getFullYear();
-      const m = String(d.getMonth()+1).padStart(2,"0");
-      const day = String(d.getDate()).padStart(2,"0");
-      const hh = String(d.getHours()).padStart(2,"0");
-      const mm = String(d.getMinutes()).padStart(2,"0");
-      return `${y}/${m}/${day} ${hh}:${mm}`;
-    }
-    function toDateMaybe(ts){
-      if (!ts) return null;
-      if (ts instanceof Date) return ts;
-      if (typeof ts === "string") {
-        const d = new Date(ts);
-        return isNaN(d) ? null : d;
-      }
-      if (typeof ts === "object" && "seconds" in ts) {
-        return new Date(ts.seconds * 1000);
-      }
-      try { return Timestamp.fromDate(ts).toDate(); } catch { return null; }
-    }
-
-    async function main(){
+    async function main() {
       await liff.init({ liffId: "2007741116-ljZP4eGp" });
-      if (!liff.isLoggedIn()) { liff.login(); return; }
+
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
 
       const profile = await liff.getProfile();
       const userId = profile.userId;
 
       const membersRef = collection(db, "members");
-      const qExist = query(membersRef, where("userId", "==", userId));
-      const existSnap = await getDocs(qExist);
+      const q = query(membersRef, where("userId", "==", userId));
+      const snapshot = await getDocs(q);
 
-      // 初回登録：連番払い出し
-      if (existSnap.empty){
-        const counterRef = doc(db, "counters", "members");
-        await runTransaction(db, async (tx) => {
-          const c = await tx.get(counterRef);
-          let last = 0;
-          if (!c.exists()) {
-            tx.set(counterRef, { lastSerial: 0 });
+      if (snapshot.empty) {
+        const countersDocRef = doc(db, "counters", "members");
+
+        await runTransaction(db, async (transaction) => {
+          const counterDoc = await transaction.get(countersDocRef);
+          let newSerial = 1;
+          if (counterDoc.exists()) {
+            const data = counterDoc.data();
+            newSerial = (data.lastSerial || 0) + 1;
           } else {
-            last = c.data().lastSerial || 0;
+            transaction.set(countersDocRef, { lastSerial: 0 });
           }
-          const newSerial = last + 1;
-          tx.update(counterRef, { lastSerial: newSerial });
+
+          transaction.update(countersDocRef, { lastSerial: newSerial });
+
           const newMemberRef = doc(membersRef);
-          tx.set(newMemberRef, {
-            userId,
-            displayName: profile.displayName ?? "",
-            pictureUrl: profile.pictureUrl ?? "",
+          transaction.set(newMemberRef, {
+            userId: userId,
+            displayName: profile.displayName,
+            pictureUrl: profile.pictureUrl,
             registeredAt: new Date(),
             memberNo: newSerial,
           });
         });
       }
 
-      // 再取得して画面へ反映
-      const snap = await getDocs(query(membersRef, where("userId","==", userId)));
-      if (snap.empty){ alert("ユーザー情報が見つかりません"); return; }
-      const data = snap.docs[0].data();
-
-      const serialEl = document.getElementById("serial");
-      if (serialEl) serialEl.innerText = `会員証 No: #${pad5(data.memberNo)}`;
-
-      const nameEl = document.getElementById("name");
-      if (nameEl) nameEl.innerText = `名前: ${data.displayName ?? profile.displayName ?? "—"}`;
-
-      const tsEl = document.getElementById("timestamp");
-      if (tsEl) {
-        const d = toDateMaybe(data.registeredAt);
-        tsEl.innerText = `登録日時: ${d ? fmtDate(d) : "—"}`;
+      const allDocs = await getDocs(query(collection(db, "members"), where("userId", "==", userId)));
+      if (allDocs.empty) {
+        alert("ユーザー情報が見つかりません");
+        return;
       }
 
-      const avatarEl = document.getElementById("profileImg");
-      if (avatarEl) avatarEl.src = (data.pictureUrl || profile.pictureUrl || "");
+      const userDoc = allDocs.docs[0];
+      const data = userDoc.data();
+
+      document.getElementById("serial").innerText =
+        `会員証 No: #${String(data.memberNo).padStart(4, "0")}`;
+      document.getElementById("name").innerText = `名前: ${data.displayName}`;
+
+      // registeredAt が Timestamp でも Date/string でも表示できるように少しだけガード
+      const ts = data.registeredAt;
+      let jsDate = null;
+      if (ts?.seconds) jsDate = new Date(ts.seconds * 1000);
+      else if (ts instanceof Date) jsDate = ts;
+      else if (typeof ts === "string") {
+        const d = new Date(ts); if (!isNaN(d)) jsDate = d;
+      }
+      document.getElementById("timestamp").innerText =
+        `登録日時: ${jsDate ? jsDate.toLocaleString() : "不明"}`;
+
+      document.getElementById("profileImg").src =
+        data.pictureUrl || profile.pictureUrl;
     }
+
+    main();
   </script>
 </body>
 </html>
