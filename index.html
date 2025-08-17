@@ -6,101 +6,112 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      background-color: #f0f0f0;
+    :root{
+      --panel-radius: 18px;
+      --panel-bg: linear-gradient(160deg, #1a1a1a 0%, #0f0f0f 60%, #1e1e1e 100%);
+      --panel-border: linear-gradient(135deg, #ff58ff 0%, #8a2be2 50%, #5dd6ff 100%);
     }
-
-    .card-container {
-      position: relative;
-      max-width: 430px;
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color:#fff;
+      min-height:100svh;
+      background: radial-gradient(1200px 700px at 50% -200px, #3a3a3a 0%, #222 40%, #111 100%);
+    }
+    .wrap{
+      max-width:460px;
       margin: 0 auto;
+      padding: 24px 16px 64px;
     }
 
-    .card-bg {
-      width: 100%;
-      display: block;
-    }
+    /* 左上ロゴ */
+    .logo-box{ width:180px; margin:0 0 16px 0; }
+    .logo-box img{ width:100%; height:auto; display:block; }
 
-    .card-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      padding: 20px;
-      box-sizing: border-box;
-      color: #000;
-      text-shadow: 1px 1px 2px #fff;
+    /* 上部カード画像 */
+    .hero-card{
+      width:100%;
+      aspect-ratio: 16/9;
+      border-radius: 16px;
+      overflow:hidden;
+      box-shadow: 0 12px 30px rgba(0,0,0,.45);
+      background:#000 center/cover no-repeat;
+      margin-bottom: 56px; /* 下の丸アイコンが被る余白 */
     }
+    .hero-card img{ width:100%; height:100%; object-fit:cover; display:block; }
 
-    /* 左上ロゴ（追加） */
-    .logo-img {
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      width: 160px;
-      height: auto;
-      display: block;
-      pointer-events: none;
-      user-select: none;
+    /* 情報カード＋丸アイコン */
+    .profile-stack{ position: relative; }
+    .profile-avatar{
+      position:absolute;
+      inset:-44px 0 auto 50%;
+      transform: translateX(-50%);
+      width: 88px; height: 88px; border-radius: 50%;
+      border: 4px solid #111; background:#222; object-fit:cover;
+      box-shadow: 0 10px 24px rgba(0,0,0,.45);
+      z-index: 2;
     }
-
-    .card-overlay h1 {
-      font-size: 20px;
-      margin: 10px 0;
-      font-weight: bold;
-      /* ロゴに置き換えるなら下の2行を有効化（見出しを隠す） */
-      /* visibility: hidden;
-      height: 0; margin: 0; */
+    .info-card{
+      position: relative; z-index: 1;
+      padding: 22px 20px;
+      border-radius: var(--panel-radius);
+      background: var(--panel-bg);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 14px 30px rgba(0,0,0,.5);
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
     }
-
-    .info-row {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
+    .info-card::before{
+      content:""; position:absolute; inset:-1px;
+      border-radius: calc(var(--panel-radius) + 1px);
+      padding:1px; background: var(--panel-border);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      pointer-events:none; opacity:.6;
     }
+    .row{ display:flex; align-items:center; justify-content:space-between; margin:16px 0; }
+    .label{ color:#e7e7e7; opacity:.95; font-size:16px; font-weight:700; letter-spacing:.02em; }
+    .value{ font-size:15px; font-weight:600; color:#ffffff; }
+    .mono{ font-variant-numeric: tabular-nums; letter-spacing:.04em; }
 
-    .info-text {
-      flex: 1;
-    }
-
-    .info-text p {
-      margin: 5px 0;
-      font-size: 16px;
-    }
-
-    .profile-img {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid #fff;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    @media (max-width:360px){
+      .profile-avatar{ inset:-40px 0 auto 50%; width:78px; height:78px; }
+      .wrap{ padding-inline:12px; }
     }
   </style>
 </head>
 <body>
-  <div class="card-container">
-    <img
-      class="card-bg"
-      src="https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/S__25624874_0.jpg?alt=media&token=795d38e8-dac6-4942-8b05-535384f8f81a"
-      alt="背景画像"
-    />
-    <div class="card-overlay">
-      <!-- 左上ロゴ（追加） -->
-      <img id="logo" class="logo-img" alt="Logo">
+  <div class="wrap">
+    <!-- 左上ロゴ -->
+    <div class="logo-box">
+      <img id="logo" alt="Logo">
+    </div>
 
-      <h1>OpenWorld 会員証</h1>
-      <div class="info-row">
-        <div class="info-text">
-          <p id="serial">会員証 No: 取得中...</p>
-          <p id="name">名前: 取得中...</p>
-          <p id="timestamp">登録日時: 取得中...</p>
+    <!-- LIVE DAO カード画像 -->
+    <div class="hero-card">
+      <img id="heroImg" alt="Membership Card">
+    </div>
+
+    <!-- 情報カード（丸アイコンが中央上で重なる） -->
+    <div class="profile-stack">
+      <img id="avatar" class="profile-avatar" alt="Profile">
+
+      <div class="info-card">
+        <div class="row">
+          <div class="label">Member ID</div>
+          <!-- 値だけ差し替える -->
+          <div id="serialValue" class="value mono">#00000</div>
         </div>
-        <img id="profileImg" class="profile-img" src="" alt="プロフィール画像">
+
+        <div class="row">
+          <div class="label">Name</div>
+          <div id="nameValue" class="value">—</div>
+        </div>
+
+        <div class="row">
+          <div class="label">Join Date</div>
+          <div id="dateValue" class="value mono">—</div>
+        </div>
       </div>
     </div>
   </div>
@@ -108,18 +119,13 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import {
-      getFirestore,
-      collection,
-      doc,
-      runTransaction,
-      query,
-      where,
-      getDocs,
-      Timestamp
+      getFirestore, collection, doc, runTransaction, query, where, getDocs, Timestamp
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-    // 追加：ロゴURL（あなたがくれた公開URL）
+    // ==== 画像URL（あなたがくれたURL） ====
     const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/Frame%206.png?alt=media&token=a744ed7e-1016-49ed-ae95-aa6d97ccf12e";
+    const CARD_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/Card.png?alt=media&token=2b4be783-84b7-4dd7-aed1-199d0172617c";
+    // =====================================
 
     const firebaseConfig = {
       apiKey: "AIzaSyDwqG7to68d7O9KQ2EPWaUD1UFm_Cq9HXo",
@@ -134,77 +140,79 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // ロゴを即セット（このスクリプトは</body>直前なので要素は既に存在）
-    const logoEl = document.getElementById("logo");
-    if (logoEl) logoEl.src = LOGO_URL;
+    // 画像セット
+    document.getElementById("logo").src = LOGO_URL;
+    document.getElementById("heroImg").src = CARD_IMAGE_URL;
 
-    async function main() {
+    // 表示フォーマッタ
+    const pad5 = (n)=> String(n ?? 0).padStart(5,"0");
+    const fmtYMD = (d)=>{
+      const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
+      return `${y}/${m}/${day}`;
+    };
+    function toDateMaybe(ts){
+      if (!ts) return null;
+      if (ts instanceof Date) return ts;
+      if (typeof ts === "string"){ const d=new Date(ts); return isNaN(d)?null:d; }
+      if (typeof ts === "object" && "seconds" in ts){ return new Date(ts.seconds*1000); }
+      try{ return Timestamp.fromDate(ts).toDate(); }catch{ return null; }
+    }
+
+    async function main(){
       await liff.init({ liffId: "2007741116-ljZP4eGp" });
-
-      if (!liff.isLoggedIn()) {
-        liff.login();
-        return;
-      }
+      if (!liff.isLoggedIn()){ liff.login(); return; }
 
       const profile = await liff.getProfile();
       const userId = profile.userId;
 
-      const membersRef = collection(db, "members");
-      const q = query(membersRef, where("userId", "==", userId));
-      const snapshot = await getDocs(q);
+      const membersRef = collection(db,"members");
+      const qExist = query(membersRef, where("userId","==", userId));
+      const existSnap = await getDocs(qExist);
 
-      if (snapshot.empty) {
-        const countersDocRef = doc(db, "counters", "members");
+      if (existSnap.empty){
+        const counterRef = doc(db,"counters","members");
+        await runTransaction(db, async(tx)=>{
+          const c = await tx.get(counterRef);
+          let last=0;
+          if (!c.exists()) tx.set(counterRef,{lastSerial:0});
+          else last = c.data().lastSerial || 0;
 
-        await runTransaction(db, async (transaction) => {
-          const counterDoc = await transaction.get(countersDocRef);
-          let newSerial = 1;
-          if (counterDoc.exists()) {
-            const data = counterDoc.data();
-            newSerial = (data.lastSerial || 0) + 1;
-          } else {
-            transaction.set(countersDocRef, { lastSerial: 0 });
-          }
-
-          transaction.update(countersDocRef, { lastSerial: newSerial });
-
+          const newSerial = last + 1;
+          tx.update(counterRef,{lastSerial:newSerial});
           const newMemberRef = doc(membersRef);
-          transaction.set(newMemberRef, {
-            userId: userId,
-            displayName: profile.displayName,
-            pictureUrl: profile.pictureUrl,
+          tx.set(newMemberRef,{
+            userId,
+            displayName: profile.displayName ?? "",
+            pictureUrl: profile.pictureUrl ?? "",
             registeredAt: new Date(),
             memberNo: newSerial,
           });
         });
       }
 
-      const allDocs = await getDocs(query(collection(db, "members"), where("userId", "==", userId)));
-      if (allDocs.empty) {
-        alert("ユーザー情報が見つかりません");
-        return;
-      }
+      // 再取得して画面へ
+      const snap = await getDocs(query(membersRef, where("userId","==",userId)));
+      if (snap.empty){ alert("ユーザー情報が見つかりません"); return; }
+      const data = snap.docs[0].data();
 
-      const userDoc = allDocs.docs[0];
-      const data = userDoc.data();
+      // 新レイアウト用の値
+      document.getElementById("serialValue").textContent = `#${pad5(data.memberNo)}`;
+      document.getElementById("nameValue").textContent   = data.displayName ?? profile.displayName ?? "—";
+      const d = toDateMaybe(data.registeredAt);
+      document.getElementById("dateValue").textContent   = d ? fmtYMD(d) : "—";
 
-      document.getElementById("serial").innerText =
-        `会員証 No: #${String(data.memberNo).padStart(4, "0")}`;
-      document.getElementById("name").innerText = `名前: ${data.displayName}`;
+      // 念のため旧IDにも反映（互換保持）
+      const serialOld = document.getElementById("serial");
+      if (serialOld) serialOld.innerText = `会員証 No: #${pad5(data.memberNo)}`;
+      const nameOld = document.getElementById("name");
+      if (nameOld) nameOld.innerText = `名前: ${data.displayName ?? profile.displayName ?? "—"}`;
+      const tsOld = document.getElementById("timestamp");
+      if (tsOld) tsOld.innerText = `登録日時: ${d ? d.toLocaleString() : "—"}`;
 
-      // registeredAt が Timestamp でも Date/string でも表示できるように少しだけガード
-      const ts = data.registeredAt;
-      let jsDate = null;
-      if (ts?.seconds) jsDate = new Date(ts.seconds * 1000);
-      else if (ts instanceof Date) jsDate = ts;
-      else if (typeof ts === "string") {
-        const d = new Date(ts); if (!isNaN(d)) jsDate = d;
-      }
-      document.getElementById("timestamp").innerText =
-        `登録日時: ${jsDate ? jsDate.toLocaleString() : "不明"}`;
-
-      document.getElementById("profileImg").src =
-        data.pictureUrl || profile.pictureUrl;
+      // プロフィール画像
+      document.getElementById("avatar").src = (data.pictureUrl || profile.pictureUrl || "");
+      const profileImgCompat = document.getElementById("profileImg");
+      if (profileImgCompat) profileImgCompat.src = (data.pictureUrl || profile.pictureUrl || "");
     }
 
     main();
