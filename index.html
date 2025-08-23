@@ -5,16 +5,18 @@
   <title>OpenWorld 会員証</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <!-- フォント（ラベル=Poppins、値=Inter） -->
+
+  <!-- フォント：ラベル=Poppins / 値=Inter -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+
   <style>
     :root{
       --panel-radius: 18px;
-      --label-size: 18px;     /* ラベルの文字サイズ */
-      --value-size: 17px;     /* 値の文字サイズ */
-      --row-gap:   18px;      /* 行間 */
-      --pad-x:     22px;      /* パネル左右パディング */
-      --pad-y:     22px;      /* パネル上下パディング */
+      --label-size: 18px;
+      --value-size: 17px;
+      --row-gap:   20px;
+      --pad-x:     24px;
+      --pad-y:     26px;
     }
     *{ box-sizing: border-box; }
     body{
@@ -29,19 +31,18 @@
     .container{
       width:100%;
       max-width:460px;
-      padding:80px 16px 64px; /* 上にロゴ分の余白 */
+      padding:120px 16px 88px; /* ロゴを大きくした分、上の余白を広めに */
       position:relative;
     }
-    /* 左上ロゴ */
+
+    /* 左上ロゴ（大きめ） */
     .logo{
-      position:absolute; 
-      top:16px; 
-      left:16px;
-      width:clamp(200px, 55vw, 280px);
-      height:auto; 
+      position:absolute;
+      top:22px; left:20px;
+      width:clamp(260px, 68vw, 340px);
+      height:auto;
       display:block;
-      pointer-events:none; 
-      user-select:none;
+      pointer-events:none; user-select:none;
     }
 
     /* 上部カード画像 */
@@ -51,7 +52,7 @@
       aspect-ratio:16/9;
       border-radius:16px;
       overflow:hidden;
-      margin-bottom:56px;
+      margin-bottom:96px;           /* カードとプロフィールの距離をしっかり確保 */
       background:#000;
       box-shadow:
         0 18px 50px rgba(0,0,0,.38),
@@ -76,80 +77,66 @@
     /* 情報カード＋丸アイコン */
     .profile-stack{ position:relative; }
     .avatar{
-      position:absolute; inset:-44px 0 auto 50%;
+      position:absolute; inset:-56px 0 auto 50%;
       transform:translateX(-50%);
-      width:88px; height:88px; border-radius:50%;
-      border:2px solid #ccc; /* 細いシルバー */
-      background:#222; object-fit:cover;
-      box-shadow:0 8px 18px rgba(0,0,0,.4); 
+      width:96px; height:96px; border-radius:50%;
+      border:2px solid #ccc; background:#222; object-fit:cover;
+      box-shadow:0 8px 18px rgba(0,0,0,.4);
       z-index:2;
     }
 
-    /* 均等太さのグラデ枠（左:銀 → 右:背景色） */
+    /* メタリックな均等太さの枠：左シルバー→右背景色へ */
     .info-card{
       position:relative; z-index:1;
       padding:var(--pad-y) var(--pad-x);
       border-radius:var(--panel-radius);
-      border:2px solid transparent; /* 枠の太さを均等に */
+      border:2px solid transparent;
       background:
-        /* 内側の面 */
         linear-gradient(160deg, #1a1a1a 0%, #0f0f0f 60%, #1e1e1e 100%) padding-box,
-        /* 外側の枠（左→右で暗く） */
-        linear-gradient(90deg, #e6e6e6 0%, #cfcfcf 35%, #2a2a2a 100%) border-box;
+        linear-gradient(90deg, #f0f0f0 0%, #d3d3d3 35%, #2a2a2a 100%) border-box;
       background-clip: padding-box, border-box;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 14px 30px rgba(0,0,0,.5);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 18px 38px rgba(0,0,0,.5);
       overflow:hidden;
     }
 
-    /* 文字レイアウト：左右2カラムで広く使う */
-          .row{
-        display: flex;
-        flex-direction: column;   /* 上下に分ける */
-        margin: 20px 0;
-      }
-
-      .label{
-        text-align: left;         /* 左寄せ */
-        font-size: 16px;
-        font-weight: 600;
-        color:#e7e7e7;
-      }
-
-      .value{
-        text-align: right;        /* 右寄せ */
-        font-size: 18px;          /* 少し大きめ */
-        font-weight: 500;
-        color:#fff;
-        margin-top: 2px;          /* ラベルとの隙間 */
-      }
-
+    /* ラベル（左）→値（右）を別行で */
+    .row{ margin: var(--row-gap) 0; }
+    .label{
+      display:block; text-align:left;
+      font-family: "Poppins", ui-sans-serif;
+      font-size: var(--label-size); font-weight: 700;
+      color:#eaeaea; letter-spacing:.02em;
+      margin-bottom:6px;
+    }
+    .value{
+      display:block; text-align:right;
+      font-family: "Inter", ui-sans-serif;
+      font-size: var(--value-size); font-weight: 600;
+      color:#fff; letter-spacing:.02em;
+    }
     .mono{ font-variant-numeric: tabular-nums; letter-spacing:.04em; }
 
-    /* 小さい端末での微調整 */
     @media (max-width:360px){
       :root{
         --label-size: 17px;
         --value-size: 16px;
         --row-gap:   16px;
         --pad-x:     18px;
-        --pad-y:     18px;
+        --pad-y:     20px;
       }
-      .avatar{ inset:-40px 0 auto 50%; width:78px; height:78px; }
+      .avatar{ inset:-48px 0 auto 50%; width:86px; height:86px; }
       .container{ padding-inline:12px; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- ロゴ -->
     <img id="logo" class="logo" alt="Logo">
 
-    <!-- LIVE DAO カード画像 -->
     <div class="hero-card">
       <img id="heroImg" alt="Membership Card">
     </div>
 
-    <!-- 情報カード -->
     <div class="profile-stack">
       <img id="avatar" class="avatar" alt="Profile">
       <div class="info-card">
@@ -157,107 +144,4 @@
           <div class="label">Member ID</div>
           <div id="serialValue" class="value mono">#00000</div>
         </div>
-        <div class="row">
-          <div class="label">Name</div>
-          <div id="nameValue" class="value">—</div>
-        </div>
-        <div class="row">
-          <div class="label">Join Date</div>
-          <div id="dateValue" class="value mono">—</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import {
-      getFirestore, collection, doc, runTransaction, query, where, getDocs, Timestamp
-    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-
-    /* 画像URL */
-    const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/Header.png?alt=media&token=44229293-82db-4a55-bef3-c656bb9e7845";
-    const CARD_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/Group%205.png?alt=media&token=d9d885a4-7dd5-4a21-8bc0-ec248a39d3a2";
-
-    /* Firebase */
-    const firebaseConfig = {
-      apiKey: "AIzaSyDwqG7to68d7O9KQ2EPWaUD1UFm_Cq9HXo",
-      authDomain: "openworld-liff.firebaseapp.com",
-      projectId: "openworld-liff",
-      storageBucket: "openworld-liff.appspot.com",
-      messagingSenderId: "79997022356",
-      appId: "1:79997022356:web:89e7081d808bc5fc418481",
-      measurementId: "G-SRK6BVFDYN"
-    };
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // 初期画像セット
-    document.getElementById("logo").src = LOGO_URL;
-    document.getElementById("heroImg").src = CARD_IMAGE_URL;
-
-    const pad5 = n => String(n ?? 0).padStart(5, "0");
-    const fmtYMD = d => {
-      const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
-      return `${y}/${m}/${day}`;
-    };
-    function toDateMaybe(ts){
-      if (!ts) return null;
-      if (ts instanceof Date) return ts;
-      if (typeof ts === "string"){ const d=new Date(ts); return isNaN(d)?null:d; }
-      if (typeof ts === "object" && "seconds" in ts){ return new Date(ts.seconds*1000); }
-      try{ return Timestamp.fromDate(ts).toDate(); }catch{ return null; }
-    }
-
-    async function main(){
-      await liff.init({ liffId: "2007741116-ljZP4eGp" });
-      if (!liff.isLoggedIn()) { liff.login(); return; }
-
-      const profile = await liff.getProfile();
-      const userId = profile.userId;
-
-      const membersRef = collection(db,"members");
-      const qExist = query(membersRef, where("userId","==", userId));
-      const existSnap = await getDocs(qExist);
-
-      if (existSnap.empty){
-        const counterRef = doc(db,"counters","members");
-        await runTransaction(db, async(tx)=>{
-          const c = await tx.get(counterRef);
-          let last = 0;
-          if (!c.exists()) tx.set(counterRef,{ lastSerial: 0 });
-          else last = c.data().lastSerial || 0;
-
-          const newSerial = last + 1;
-          tx.update(counterRef, { lastSerial: newSerial });
-
-          const newMemberRef = doc(membersRef);
-          tx.set(newMemberRef, {
-            userId,
-            displayName: profile.displayName ?? "",
-            pictureUrl: profile.pictureUrl ?? "",
-            registeredAt: new Date(),
-            memberNo: newSerial,
-          });
-        });
-      }
-
-      const snap = await getDocs(query(membersRef, where("userId","==", userId)));
-      if (snap.empty){ alert("ユーザー情報が見つかりません"); return; }
-      const data = snap.docs[0].data();
-
-      document.getElementById("serialValue").textContent = `#${pad5(data.memberNo)}`;
-      document.getElementById("nameValue").textContent   = data.displayName ?? profile.displayName ?? "—";
-      const d = toDateMaybe(data.registeredAt);
-      document.getElementById("dateValue").textContent   = d ? fmtYMD(d) : "—";
-
-      document.getElementById("avatar").src = (data.pictureUrl || profile.pictureUrl || "");
-    }
-
-    main().catch(e=>{
-      console.error(e);
-      alert("初期化に失敗しました。LINEアプリ内で開いているか確認してください。");
-    });
-  </script>
-</body>
-</html>
+        <div cla
