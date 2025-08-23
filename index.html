@@ -82,18 +82,24 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 14px 30px rgba(0,0,0,.5);
       border:1px solid rgba(255,255,255,0.08); overflow:hidden;
     }
-      .info-card::before{
-    content:""; 
-    position:absolute; inset:-2px; /* ← 太さ調整（-1px→-2pxで枠が太く見える） */
-    border-radius:calc(var(--panel-radius)+2px);
-    padding:2px; /* ← paddingを増やして輪郭を強調 */
-    background: linear-gradient(135deg, #dcdcdc 0%, #b0b0b0 30%, #555 100%);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor; 
-    mask-composite: exclude; 
-    opacity:.9; /* ← 少し濃く */
-    pointer-events:none;
-  }
+    .info-card::before{
+  content:""; 
+  position:absolute; inset:-2px; /* 均等に枠を太めに */
+  border-radius:calc(var(--panel-radius) + 2px);
+  padding:2px; 
+  /* 左がシルバー → 右が背景色に近い暗めの色 */
+  background: linear-gradient(
+    90deg, 
+    #e0e0e0 0%,   /* 左：明るいシルバー */
+    #b0b0b0 30%,  /* 中間：落ち着いたグレー */
+    #2a2a2a 100%  /* 右：背景に溶け込むダークグレー */
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; 
+  mask-composite: exclude; 
+  opacity:.9; /* 光沢を強めに */
+  pointer-events:none;
+}
     .row{ display:flex; align-items:center; justify-content:space-between; margin:16px 0; }
     .label{ color:#e7e7e7; opacity:.95; font-size:16px; font-weight:700; letter-spacing:.02em; }
     .value{ font-size:15px; font-weight:600; color:#fff; }
