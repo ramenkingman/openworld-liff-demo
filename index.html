@@ -30,14 +30,31 @@
       pointer-events:none; user-select:none;
     }
 
-    /* 上部カード画像（★修正：黒背景削除・imgに角丸継承） */
+    /* 上部カード画像：影をCSSで付与（外側＋内側） */
     .hero-card{
+      position:relative;
       width:100%;
       aspect-ratio:16/9;
       border-radius:16px;
       overflow:hidden;                     /* 角丸でクリップ */
-      box-shadow:0 12px 30px rgba(0,0,0,.45);
       margin-bottom:56px;
+      background:#000;                     /* 白フリンジ対策 */
+
+      /* 外側のシャドウ（ふわっと持ち上げる） */
+      box-shadow:
+        0 18px 50px rgba(0,0,0,.38),
+        0  8px 20px rgba(0,0,0,.32),
+        0  2px  6px rgba(0,0,0,.25);
+    }
+    .hero-card::after{
+      /* 内側のほんのり落ち影＋上辺ハイライトで立体感 */
+      content:"";
+      position:absolute; inset:0;
+      border-radius:inherit;
+      pointer-events:none;
+      box-shadow:
+        inset 0 -22px 28px rgba(0,0,0,.28),
+        inset 0   1px  0 rgba(255,255,255,.06);
     }
     .hero-card img{
       width:100%; height:100%;
@@ -117,7 +134,6 @@
     /* 画像URL */
     const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/Header.png?alt=media&token=44229293-82db-4a55-bef3-c656bb9e7845";
     const CARD_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/Group%205.png?alt=media&token=d9d885a4-7dd5-4a21-8bc0-ec248a39d3a2";
-
 
     /* Firebase */
     const firebaseConfig = {
