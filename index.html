@@ -82,24 +82,27 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 14px 30px rgba(0,0,0,.5);
       border:1px solid rgba(255,255,255,0.08); overflow:hidden;
     }
-    .info-card::before{
-  content:""; 
-  position:absolute; inset:-2px; /* 均等に枠を太めに */
+    .info-card::before {
+  content:"";
+  position:absolute;
+  inset:-2px;
   border-radius:calc(var(--panel-radius) + 2px);
-  padding:2px; 
-  /* 左がシルバー → 右が背景色に近い暗めの色 */
+  padding:2px;
+  /* 左辺をしっかり明るくしてからグラデーション */
   background: linear-gradient(
-    90deg, 
-    #e0e0e0 0%,   /* 左：明るいシルバー */
-    #b0b0b0 30%,  /* 中間：落ち着いたグレー */
-    #2a2a2a 100%  /* 右：背景に溶け込むダークグレー */
+    90deg,
+    #f0f0f0 0%,   /* 左端：しっかり明るいシルバー */
+    #d0d0d0 10%,  /* 少し中までシルバー */
+    #888 60%,     /* 中央はグレー */
+    #1a1a1a 100%  /* 右端は背景色に溶け込む */
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; 
-  mask-composite: exclude; 
-  opacity:.9; /* 光沢を強めに */
-  pointer-events:none;
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: .95;
+  pointer-events: none;
 }
+
     .row{ display:flex; align-items:center; justify-content:space-between; margin:16px 0; }
     .label{ color:#e7e7e7; opacity:.95; font-size:16px; font-weight:700; letter-spacing:.02em; }
     .value{ font-size:15px; font-weight:600; color:#fff; }
