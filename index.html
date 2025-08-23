@@ -25,9 +25,14 @@
     }
     /* 左上ロゴ（固定） */
     .logo{
-      position:absolute; top:16px; left:16px;
-      width:160px; height:auto; display:block;
-      pointer-events:none; user-select:none;
+      position:absolute; 
+      top:16px; 
+      left:16px;
+      width:clamp(200px, 55vw, 280px); /* 最小200px〜最大280pxで画面幅に応じて可変 */
+      height:auto; 
+      display:block;
+      pointer-events:none; 
+      user-select:none;
     }
 
     /* 上部カード画像：影をCSSで付与（外側＋内側） */
