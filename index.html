@@ -5,8 +5,10 @@
   <title>OpenWorld 会員証</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
   <!-- フォント -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Krona+One&display=swap" rel="stylesheet">
+
   <style>
     :root{
       --panel-radius: 18px;
@@ -14,7 +16,7 @@
     *{ box-sizing: border-box; }
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      font-family: system-ui, sans-serif;
       color:#fff;
       min-height:100svh;
       background: radial-gradient(1200px 700px at 50% -200px, #7a7a7a 0%, #535353 40%, #2e2e2e 100%);
@@ -24,17 +26,16 @@
     .container{
       width:100%;
       max-width:460px;
-      /* ▼ ロゴとカードの距離を「少しだけ」詰める */
-      padding:100px 16px 100px;
+      padding:140px 16px 100px;
       position:relative;
     }
 
-    /* 左上ロゴ（大きく＆さらに左へ） */
+    /* 左上ロゴ */
     .logo{
       position:absolute; 
       top:20px; 
-      left:4px; /* ← 左に寄せた */
-      width:clamp(280px, 75vw, 420px); /* ← ひと回り大きく */
+      left:20px;
+      width:clamp(240px, 65vw, 340px);
       height:auto; 
       display:block;
       pointer-events:none; 
@@ -48,12 +49,11 @@
       aspect-ratio:16/9;
       border-radius:16px;
       overflow:hidden;
-      margin-bottom:90px;  /* カードとプロフィールの距離は現状キープ */
+      margin-bottom:90px;
       background:#000;
-      box-shadow:
-        0 18px 50px rgba(0,0,0,.38),
-        0  8px 20px rgba(0,0,0,.32),
-        0  2px  6px rgba(0,0,0,.25);
+      box-shadow: 0 18px 50px rgba(0,0,0,.38),
+                  0  8px 20px rgba(0,0,0,.32),
+                  0  2px  6px rgba(0,0,0,.25);
     }
     .hero-card img{
       width:100%; height:100%;
@@ -61,7 +61,7 @@
       border-radius:inherit;
     }
 
-    /* 情報カード＋丸アイコン */
+    /* プロフィール */
     .profile-stack{ position:relative; }
     .avatar{
       position:absolute; inset:-56px 0 auto 50%;
@@ -73,6 +73,7 @@
       z-index:2;
     }
 
+    /* 情報カード */
     .info-card{
       position:relative; z-index:1;
       padding:24px 22px;
@@ -82,22 +83,32 @@
         linear-gradient(160deg, #1a1a1a 0%, #0f0f0f 60%, #1e1e1e 100%) padding-box,
         linear-gradient(90deg, #f0f0f0 0%, #d3d3d3 35%, #2a2a2a 100%) border-box;
       background-clip: padding-box, border-box;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 18px 38px rgba(0,0,0,.5);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05),
+                  0 18px 38px rgba(0,0,0,.5);
       overflow:hidden;
     }
 
-    .row{ margin: 22px 0; }
+    /* 行 */
+    .row{ margin:22px 0; }
+
+    /* ラベル Krona One */
     .label{
-      display:block; text-align:left;
-      font-family: "Poppins", sans-serif;
-      font-size: 17px; font-weight: 700;
+      display:block;
+      text-align:left;
+      font-family: "Krona One", sans-serif;
+      font-size:17px;
+      font-weight:400;
       color:#eaeaea;
       margin-bottom:6px;
     }
+
+    /* 値 Inter（細め） */
     .value{
-      display:block; text-align:right;
+      display:block;
+      text-align:right;
       font-family: "Inter", sans-serif;
-      font-size: 18px; font-weight: 600;
+      font-size:17px;
+      font-weight:400; /* ★細め */
       color:#fff;
     }
 
@@ -186,7 +197,7 @@
         await runTransaction(db, async(tx)=>{
           const c=await tx.get(counterRef);
           let last=0;
-          if(!c.exists()) tx.set(counterRef,{ lastSerial: 0 });
+          if(!c.exists()) tx.set(counterRef,{ lastSerial:0 });
           else last=c.data().lastSerial||0;
 
           const newSerial=last+1;
