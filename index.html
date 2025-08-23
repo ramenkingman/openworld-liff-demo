@@ -66,15 +66,15 @@
 
     /* 情報カード＋丸アイコン */
     .profile-stack{ position:relative; }
-          .avatar{
-        position:absolute; inset:-44px 0 auto 50%;
-        transform:translateX(-50%);
-        width:88px; height:88px; border-radius:50%;
-        border:4px solid #c0c0c0; /* ✦ 4pxに戻して落ち着いたシルバー */
-        background:#222; object-fit:cover;
-        box-shadow:0 8px 18px rgba(0,0,0,.4); 
-        z-index:2;
-      }
+    .avatar{
+      position:absolute; inset:-44px 0 auto 50%;
+      transform:translateX(-50%);
+      width:88px; height:88px; border-radius:50%;
+      border:2px solid #ccc; /* 枠を細いシルバー */
+      background:#222; object-fit:cover;
+      box-shadow:0 8px 18px rgba(0,0,0,.4); 
+      z-index:2;
+    }
     .info-card{
       position:relative; z-index:1;
       padding:22px 20px; border-radius:var(--panel-radius);
@@ -82,19 +82,18 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 14px 30px rgba(0,0,0,.5);
       border:1px solid rgba(255,255,255,0.08); overflow:hidden;
     }
-    .info-card::before{
-      content:""; 
-      position:absolute; inset:-1px; 
-      border-radius:calc(var(--panel-radius)+1px);
-      padding:1px; 
-      /* シルバー～右に暗めのグラデーション */
-      background: linear-gradient(135deg, #dcdcdc 0%, #aaaaaa 40%, #444 100%);
-      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor; 
-      mask-composite: exclude; 
-      opacity:.85; 
-      pointer-events:none;
-    }
+      .info-card::before{
+    content:""; 
+    position:absolute; inset:-2px; /* ← 太さ調整（-1px→-2pxで枠が太く見える） */
+    border-radius:calc(var(--panel-radius)+2px);
+    padding:2px; /* ← paddingを増やして輪郭を強調 */
+    background: linear-gradient(135deg, #dcdcdc 0%, #b0b0b0 30%, #555 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; 
+    mask-composite: exclude; 
+    opacity:.9; /* ← 少し濃く */
+    pointer-events:none;
+  }
     .row{ display:flex; align-items:center; justify-content:space-between; margin:16px 0; }
     .label{ color:#e7e7e7; opacity:.95; font-size:16px; font-weight:700; letter-spacing:.02em; }
     .value{ font-size:15px; font-weight:600; color:#fff; }
