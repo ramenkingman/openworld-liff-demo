@@ -66,15 +66,15 @@
 
     /* 情報カード＋丸アイコン */
     .profile-stack{ position:relative; }
-    .avatar{
-      position:absolute; inset:-44px 0 auto 50%;
-      transform:translateX(-50%);
-      width:88px; height:88px; border-radius:50%;
-      border:2px solid #ccc; /* 枠を細いシルバー */
-      background:#222; object-fit:cover;
-      box-shadow:0 8px 18px rgba(0,0,0,.4); 
-      z-index:2;
-    }
+          .avatar{
+        position:absolute; inset:-44px 0 auto 50%;
+        transform:translateX(-50%);
+        width:88px; height:88px; border-radius:50%;
+        border:4px solid #c0c0c0; /* ✦ 4pxに戻して落ち着いたシルバー */
+        background:#222; object-fit:cover;
+        box-shadow:0 8px 18px rgba(0,0,0,.4); 
+        z-index:2;
+      }
     .info-card{
       position:relative; z-index:1;
       padding:22px 20px; border-radius:var(--panel-radius);
