@@ -12,6 +12,7 @@
   <style>
     :root{
       --panel-radius: 18px;
+      --label-value-gap: 12px; /* ★ラベルと値の間隔をここで調整 */
     }
     *{ box-sizing: border-box; }
     body{
@@ -32,13 +33,13 @@
 
     /* 左上ロゴ */
     .logo{
-      position:absolute; 
-      top:20px; 
+      position:absolute;
+      top:20px;
       left:4px;
       width:clamp(280px, 75vw, 420px);
-      height:auto; 
+      height:auto;
       display:block;
-      pointer-events:none; 
+      pointer-events:none;
       user-select:none;
     }
 
@@ -69,7 +70,7 @@
       width:96px; height:96px; border-radius:50%;
       border:2px solid #ccc;
       background:#222; object-fit:cover;
-      box-shadow:0 8px 18px rgba(0,0,0,.4); 
+      box-shadow:0 8px 18px rgba(0,0,0,.4);
       z-index:2;
     }
 
@@ -99,7 +100,7 @@
       font-size:17px;
       font-weight:400;
       color:#eaeaea;
-      margin-bottom:6px;
+      margin-bottom: var(--label-value-gap); /* ★ここでラベル→値の隙間を確保 */
     }
 
     /* 値 Inter（細め） */
@@ -108,13 +109,14 @@
       text-align:right;
       font-family: "Inter", sans-serif;
       font-size:17px;
-      font-weight:400; /* ★細め */
+      font-weight:400; /* 細め */
       color:#fff;
     }
 
     @media (max-width:360px){
       .container{ padding:120px 12px 80px; }
       .avatar{ width:86px; height:86px; inset:-48px 0 auto 50%; }
+      :root{ --label-value-gap: 14px; } /* 小さい端末で少し広げたい場合 */
     }
   </style>
 </head>
