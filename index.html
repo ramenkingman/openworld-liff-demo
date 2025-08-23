@@ -66,42 +66,32 @@
 
     /* 情報カード＋丸アイコン */
     .profile-stack{ position:relative; }
+
     .avatar{
       position:absolute; inset:-44px 0 auto 50%;
       transform:translateX(-50%);
       width:88px; height:88px; border-radius:50%;
-      border:2px solid #ccc; /* 枠を細いシルバー */
+      border:2px solid #ccc; /* 細いシルバー */
       background:#222; object-fit:cover;
       box-shadow:0 8px 18px rgba(0,0,0,.4); 
       z-index:2;
     }
+
+    /* ← ここを作り直し：均等太さのグラデ枠（左:銀 → 右:背景色） */
     .info-card{
       position:relative; z-index:1;
-      padding:22px 20px; border-radius:var(--panel-radius);
-      background: linear-gradient(160deg, #1a1a1a 0%, #0f0f0f 60%, #1e1e1e 100%);
+      padding:22px 20px;
+      border-radius:var(--panel-radius);
+      border:2px solid transparent; /* 枠の太さを均等に */
+      background:
+        /* 内側の面 */
+        linear-gradient(160deg, #1a1a1a 0%, #0f0f0f 60%, #1e1e1e 100%) padding-box,
+        /* 外側の枠（左→右で暗く） */
+        linear-gradient(90deg, #e6e6e6 0%, #cfcfcf 35%, #2a2a2a 100%) border-box;
+      background-clip: padding-box, border-box;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 14px 30px rgba(0,0,0,.5);
-      border:1px solid rgba(255,255,255,0.08); overflow:hidden;
+      overflow:hidden;
     }
-    .info-card::before {
-  content:"";
-  position:absolute;
-  inset:-2px;
-  border-radius:calc(var(--panel-radius) + 2px);
-  padding:2px;
-  /* 左辺をしっかり明るくしてからグラデーション */
-  background: linear-gradient(
-    90deg,
-    #f0f0f0 0%,   /* 左端：しっかり明るいシルバー */
-    #d0d0d0 10%,  /* 少し中までシルバー */
-    #888 60%,     /* 中央はグレー */
-    #1a1a1a 100%  /* 右端は背景色に溶け込む */
-  );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: .95;
-  pointer-events: none;
-}
 
     .row{ display:flex; align-items:center; justify-content:space-between; margin:16px 0; }
     .label{ color:#e7e7e7; opacity:.95; font-size:16px; font-weight:700; letter-spacing:.02em; }
