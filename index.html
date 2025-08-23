@@ -5,8 +5,17 @@
   <title>OpenWorld 会員証</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <!-- フォント（ラベル=Poppins、値=Inter） -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <style>
-    :root{ --panel-radius: 18px; }
+    :root{
+      --panel-radius: 18px;
+      --label-size: 18px;     /* ラベルの文字サイズ */
+      --value-size: 17px;     /* 値の文字サイズ */
+      --row-gap:   18px;      /* 行間 */
+      --pad-x:     22px;      /* パネル左右パディング */
+      --pad-y:     22px;      /* パネル上下パディング */
+    }
     *{ box-sizing: border-box; }
     body{
       margin:0;
@@ -35,7 +44,7 @@
       user-select:none;
     }
 
-    /* カード画像 */
+    /* 上部カード画像 */
     .hero-card{
       position:relative;
       width:100%;
@@ -66,7 +75,6 @@
 
     /* 情報カード＋丸アイコン */
     .profile-stack{ position:relative; }
-
     .avatar{
       position:absolute; inset:-44px 0 auto 50%;
       transform:translateX(-50%);
@@ -77,10 +85,10 @@
       z-index:2;
     }
 
-    /* ← ここを作り直し：均等太さのグラデ枠（左:銀 → 右:背景色） */
+    /* 均等太さのグラデ枠（左:銀 → 右:背景色） */
     .info-card{
       position:relative; z-index:1;
-      padding:22px 20px;
+      padding:var(--pad-y) var(--pad-x);
       border-radius:var(--panel-radius);
       border:2px solid transparent; /* 枠の太さを均等に */
       background:
@@ -93,12 +101,40 @@
       overflow:hidden;
     }
 
-    .row{ display:flex; align-items:center; justify-content:space-between; margin:16px 0; }
-    .label{ color:#e7e7e7; opacity:.95; font-size:16px; font-weight:700; letter-spacing:.02em; }
-    .value{ font-size:15px; font-weight:600; color:#fff; }
+    /* 文字レイアウト：左右2カラムで広く使う */
+    .row{
+      display:grid;
+      grid-template-columns: 1fr auto; /* 左:ラベル / 右:値 */
+      align-items:baseline;
+      gap: 8px 16px; /* 行×列の隙間 */
+      margin: var(--row-gap) 0;
+    }
+    .label{
+      font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      font-weight:700;
+      font-size: var(--label-size);
+      letter-spacing:.02em;
+      color:#f0f0f0;
+      opacity:.95;
+    }
+    .value{
+      justify-self:end;   /* 値は右側に寄せる */
+      font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      font-weight:600;
+      font-size: var(--value-size);
+      color:#fff;
+    }
     .mono{ font-variant-numeric: tabular-nums; letter-spacing:.04em; }
 
+    /* 小さい端末での微調整 */
     @media (max-width:360px){
+      :root{
+        --label-size: 17px;
+        --value-size: 16px;
+        --row-gap:   16px;
+        --pad-x:     18px;
+        --pad-y:     18px;
+      }
       .avatar{ inset:-40px 0 auto 50%; width:78px; height:78px; }
       .container{ padding-inline:12px; }
     }
