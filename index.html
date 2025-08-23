@@ -67,13 +67,13 @@
     /* 情報カード＋丸アイコン */
     .profile-stack{ position:relative; }
 
-    /* ★ アバター → 薄いシルバーリング */
+    /* ★ アバター → より細いシルバーリング */
     .avatar{
       position:absolute; inset:-44px 0 auto 50%;
       transform:translateX(-50%);
       width:88px; height:88px; border-radius:50%;
       object-fit:cover; z-index:2;
-      padding:1.5px; /* 薄めに変更 */
+      padding:0.8px; /* さらに薄く */
       background: linear-gradient(135deg, #f5f5f5, #c0c0c0, #e0e0e0);
       box-shadow:0 4px 10px rgba(0,0,0,.35);
       border:none;
@@ -88,10 +88,11 @@
       border:1px solid rgba(255,255,255,0.08); overflow:hidden;
     }
 
-    /* ★ プロフィールカード → シルバー縁を太めに（落ち着いたトーン） */
+    /* ★ 情報カード → シルバー縁を大きめに（太さは据え置き） */
     .info-card::before{
-      content:""; position:absolute; inset:-1px; border-radius:calc(var(--panel-radius)+1px);
-      padding:2px 1.5px 2px 2.5px; /* 上 右 下 左（右を細め） */
+      content:""; position:absolute; inset:-2px; /* 外枠を広げる */
+      border-radius:calc(var(--panel-radius)+2px);
+      padding:3px; /* 太さキープ */
       background: linear-gradient(135deg, #e6e6e6, #c0c0c0, #b0b0b0, #dcdcdc);
       -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
       -webkit-mask-composite: xor; mask-composite: exclude;
