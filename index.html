@@ -51,16 +51,12 @@
     /* ロゴ（カードと同じ左端へ） */
     .logo{
       display:block;
-      width:100%;        /* ←カードと同じくコンテナ幅いっぱい */
+      width:100%;
       max-width:100%;
       height:auto;
       pointer-events:none;
       user-select:none;
-
-      /* 左端そろえ微調整（画像側に透明余白がある場合用） */
       margin-left: var(--logo-left-nudge);
-
-      /* ロゴ→カードの見た目の間隔 = --space（補正込み） */
       margin-bottom: calc(var(--space) + var(--logo-adjust));
     }
 
@@ -95,8 +91,8 @@
       width:96px; height:96px; border-radius:50%;
       border:2px solid #ccc;
       background:#222;
-      object-fit:cover;          /* 四角画像でも綺麗に丸く見せる */
-      object-position: 50% 50%;  /* 必要なら 50% 40% などで微調整 */
+      object-fit:cover;
+      object-position: 50% 50%;
       box-shadow:0 8px 18px rgba(0,0,0,.4);
       z-index:2;
     }
@@ -145,7 +141,7 @@
         --logo-adjust: 4px;
         --card-adjust: -2px;
         --card-nudge: -6px;
-        --logo-left-nudge: 0px; /* 必要なら -2px などに */
+        --logo-left-nudge: 0px;
       }
       .container{ padding: calc(var(--space) + 20px) 12px 80px; }
       .avatar{ width:86px; height:86px; }
@@ -261,13 +257,14 @@
       const docRef = snap.docs[0].ref;
       const data=snap.docs[0].data();
 
-      // ★ A案：LIFFの最新を常に優先表示
+      /* === 方針1：LINEの値を最優先（nullならデフォルト） === */
+
+      // 1) 表示：LINEの最新写真 → なければデフォルト
       const latestPhoto = profile.pictureUrl || null;
-      const storedPhoto = data.pictureUrl || null;
-      const chosenPhoto = latestPhoto || storedPhoto || DEFAULT_AVATAR_URL;
+      const chosenPhoto = latestPhoto || DEFAULT_AVATAR_URL;
 
       const avatarEl = document.getElementById("avatar");
-      // キャッシュ強い場合は下行のコメントを外す（軽いキャッシュバスター）
+      // キャッシュが強い環境で即時反映したい場合は次の2行を使ってね
       // const cacheBusted = chosenPhoto + ((chosenPhoto.includes("?") ? "&" : "?") + "t=" + Date.now());
       // avatarEl.src = cacheBusted;
       avatarEl.src = chosenPhoto;
@@ -278,20 +275,22 @@
         }
       };
 
-      // 名前も最新を優先
+      // 2) Firestore：LINEの値そのままに追従（nullならnullを保存）
+      if ((data.pictureUrl || null) !== latestPhoto) {
+        await updateDoc(docRef, { pictureUrl: latestPhoto || null });
+      }
+
+      // 名前もLINEの最新を優先（空なら既存 or 空）
       const latestName = profile.displayName || data.displayName || "";
       document.getElementById("nameValue").textContent = latestName || "—";
+
+      if ((data.displayName || "") !== latestName) {
+        await updateDoc(docRef, { displayName: latestName });
+      }
+
       document.getElementById("serialValue").textContent=`#${pad5(data.memberNo)}`;
       const d=toDateMaybe(data.registeredAt);
       document.getElementById("dateValue").textContent=d?fmtYMD(d):"—";
-
-      // ★ Firestoreへ差分があれば追従更新（画像・名前）
-      const updates = {};
-      if (latestPhoto && latestPhoto !== storedPhoto) updates.pictureUrl = latestPhoto;
-      if ((data.displayName || "") !== latestName) updates.displayName = latestName;
-      if (Object.keys(updates).length) {
-        await updateDoc(docRef, updates);
-      }
     }
 
     main().catch(e=>{
