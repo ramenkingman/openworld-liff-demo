@@ -57,7 +57,7 @@
       pointer-events:none;
       user-select:none;
 
-      /* 左端そろえの微調整（画像側の余白がある場合に使う） */
+      /* 左端そろえ微調整（画像側に透明余白がある場合用） */
       margin-left: var(--logo-left-nudge);
 
       /* ロゴ→カードの見た目の間隔 = --space（補正込み） */
@@ -94,7 +94,9 @@
       transform:translateX(-50%);
       width:96px; height:96px; border-radius:50%;
       border:2px solid #ccc;
-      background:#222; object-fit:cover;
+      background:#222;
+      object-fit:cover;          /* 四角画像でも綺麗に丸く見せる */
+      object-position: 50% 50%;  /* 必要なら 50% 40% などで微調整 */
       box-shadow:0 8px 18px rgba(0,0,0,.4);
       z-index:2;
     }
@@ -179,10 +181,16 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getFirestore, collection, doc, runTransaction, query, where, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import {
+      getFirestore, collection, doc, runTransaction,
+      query, where, getDocs, Timestamp, updateDoc
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
     const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/Header.png?alt=media&token=44229293-82db-4a55-bef3-c656bb9e7845";
     const CARD_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/Group%205.png?alt=media&token=d9d885a4-7dd5-4a21-8bc0-ec248a39d3a2";
+
+    // デフォルトアバター（四角でもOK、CSSで丸表示）
+    const DEFAULT_AVATAR_URL = "https://firebasestorage.googleapis.com/v0/b/openworld-liff.firebasestorage.app/o/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202025-08-30%20032839.png?alt=media&token=cc26ae94-7e9a-49ae-9566-591133911527";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDwqG7to68d7O9KQ2EPWaUD1UFm_Cq9HXo",
@@ -224,6 +232,7 @@
       const qExist = query(membersRef, where("userId","==", userId));
       const existSnap = await getDocs(qExist);
 
+      // 初回登録（memberが無い時）
       if(existSnap.empty){
         const counterRef = doc(db,"counters","members");
         await runTransaction(db, async(tx)=>{
@@ -238,24 +247,51 @@
           const newMemberRef=doc(membersRef);
           tx.set(newMemberRef,{
             userId,
-            displayName: profile.displayName??"",
-            pictureUrl: profile.pictureUrl??"",
+            displayName: profile.displayName ?? "",
+            pictureUrl: profile.pictureUrl || null, // 空文字でなくnull推奨
             registeredAt:new Date(),
             memberNo:newSerial,
           });
         });
       }
 
+      // 再取得（上の登録直後含む）
       const snap=await getDocs(query(membersRef, where("userId","==", userId)));
       if(snap.empty){ alert("ユーザー情報が見つかりません"); return; }
+      const docRef = snap.docs[0].ref;
       const data=snap.docs[0].data();
 
+      // ★ A案：LIFFの最新を常に優先表示
+      const latestPhoto = profile.pictureUrl || null;
+      const storedPhoto = data.pictureUrl || null;
+      const chosenPhoto = latestPhoto || storedPhoto || DEFAULT_AVATAR_URL;
+
+      const avatarEl = document.getElementById("avatar");
+      // キャッシュ強い場合は下行のコメントを外す（軽いキャッシュバスター）
+      // const cacheBusted = chosenPhoto + ((chosenPhoto.includes("?") ? "&" : "?") + "t=" + Date.now());
+      // avatarEl.src = cacheBusted;
+      avatarEl.src = chosenPhoto;
+
+      avatarEl.onerror = () => {
+        if (avatarEl.src !== DEFAULT_AVATAR_URL) {
+          avatarEl.src = DEFAULT_AVATAR_URL;
+        }
+      };
+
+      // 名前も最新を優先
+      const latestName = profile.displayName || data.displayName || "";
+      document.getElementById("nameValue").textContent = latestName || "—";
       document.getElementById("serialValue").textContent=`#${pad5(data.memberNo)}`;
-      document.getElementById("nameValue").textContent=data.displayName ?? profile.displayName ?? "—";
       const d=toDateMaybe(data.registeredAt);
       document.getElementById("dateValue").textContent=d?fmtYMD(d):"—";
 
-      document.getElementById("avatar").src=(data.pictureUrl || profile.pictureUrl || "");
+      // ★ Firestoreへ差分があれば追従更新（画像・名前）
+      const updates = {};
+      if (latestPhoto && latestPhoto !== storedPhoto) updates.pictureUrl = latestPhoto;
+      if ((data.displayName || "") !== latestName) updates.displayName = latestName;
+      if (Object.keys(updates).length) {
+        await updateDoc(docRef, updates);
+      }
     }
 
     main().catch(e=>{
