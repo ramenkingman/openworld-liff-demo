@@ -21,11 +21,14 @@
       --avatar-overlap: 56px;
 
       /* 画像の見え方補正（ロゴ/カードの“視覚的な高さ”差を吸収） */
-      --logo-adjust: 6px;    /* ロゴ側を少し増やす */
-      --card-adjust: -4px;   /* カード側を少し減らす */
+      --logo-adjust: 6px;
+      --card-adjust: -4px;
 
-      /* ▼カードだけ上に持ち上げる量（負で上へ） */
-      --card-nudge: -18px;    /* -6〜-12pxで微調整してね */
+      /* カードだけ上に持ち上げる量（負で上へ） */
+      --card-nudge: -18px;
+
+      /* ▼ロゴの“左ズレ”補正（負で左へ、正で右へ） */
+      --logo-left-nudge: 0px;
     }
 
     *{ box-sizing: border-box; }
@@ -45,15 +48,20 @@
       position:relative;
     }
 
-    /* ロゴ（通常フロー） */
+    /* ロゴ（カードと同じ左端へ） */
     .logo{
-      width:clamp(280px, 75vw, 420px);
-      height:auto;
       display:block;
+      width:100%;        /* ←カードと同じくコンテナ幅いっぱい */
+      max-width:100%;
+      height:auto;
       pointer-events:none;
       user-select:none;
+
+      /* 左端そろえの微調整（画像側の余白がある場合に使う） */
+      margin-left: var(--logo-left-nudge);
+
       /* ロゴ→カードの見た目の間隔 = --space（補正込み） */
-      margin: 0 0 calc(var(--space) + var(--logo-adjust));
+      margin-bottom: calc(var(--space) + var(--logo-adjust));
     }
 
     /* 上部カード */
@@ -67,11 +75,7 @@
       box-shadow: 0 18px 50px rgba(0,0,0,.38),
                   0  8px 20px rgba(0,0,0,.32),
                   0  2px  6px rgba(0,0,0,.25);
-
-      /* カードを上に持ち上げる（負で上） */
       margin-top: var(--card-nudge);
-
-      /* 見た目の“カード下端→アバター上端”= --space を維持するために補正 */
       margin-bottom: calc(
         var(--space) + var(--card-adjust) + var(--avatar-overlap) - var(--card-nudge)
       );
@@ -138,7 +142,8 @@
         --avatar-overlap: 48px;
         --logo-adjust: 4px;
         --card-adjust: -2px;
-        --card-nudge: -6px; /* 小さい端末では持ち上げ量を少し弱める */
+        --card-nudge: -6px;
+        --logo-left-nudge: 0px; /* 必要なら -2px などに */
       }
       .container{ padding: calc(var(--space) + 20px) 12px 80px; }
       .avatar{ width:86px; height:86px; }
